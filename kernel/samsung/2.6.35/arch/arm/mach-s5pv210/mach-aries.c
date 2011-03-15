@@ -4200,6 +4200,10 @@ static unsigned int aries_sleep_gpio_table[][3] = {
 	/* Memory part ending and off part ending */
 };
 
+#ifdef CONFIG_KEYPAD_CYPRESS_TOUCH_USE_BLN
+extern bool BacklightNotification_ongoing;
+#endif
+
 void s3c_config_sleep_gpio_table(int array_size, unsigned int (*gpio_table)[3])
 {
 	u32 i, gpio;

@@ -53,17 +53,17 @@ static DEFINE_MUTEX(set_freq_lock);
 
 /* frequency */
 static struct cpufreq_frequency_table freq_table[] = {
-	{L0, 1200*1000},
+	{L0, 1200*1000}, //Added additional frequency here
 	{L1, 1000*1000},
 	{L2, 800*1000},
-	//{L3, 600*1000},
+	//{L3, 600*1000}, //and here (This ones disabled)
 	{L3, 400*1000},
 	{L4, 200*1000},
 	{L5, 100*1000},
 	{0, CPUFREQ_TABLE_END},
 };
 
-extern int exp_UV_mV[6];
+extern int exp_UV_mV[6]; //Needed for uv
 
 struct s5pv210_dvs_conf {
 	unsigned long       arm_volt;   /* uV */
@@ -73,6 +73,7 @@ struct s5pv210_dvs_conf {
 const unsigned long arm_volt_max = 1350000;
 const unsigned long int_volt_max = 1250000;
 
+// added more voltage levels for the added frequencies
 static struct s5pv210_dvs_conf dvs_conf[] = {
 	[L0] = { 
 		.arm_volt   = 1300000,
@@ -104,6 +105,7 @@ static struct s5pv210_dvs_conf dvs_conf[] = {
 	},
 };
 
+//more clocks 
 static u32 clkdiv_val[6][11] = {
 	/*{ APLL, A2M, HCLK_MSYS, PCLK_MSYS,
 	 * HCLK_DSYS, PCLK_DSYS, HCLK_PSYS, PCLK_PSYS, ONEDRAM,
@@ -125,6 +127,7 @@ static u32 clkdiv_val[6][11] = {
 	{7, 7, 0, 0, 7, 0, 9, 0, 7, 0, 0},
 };
 
+//And even more clocks
 static struct s3c_freq clk_info[] = {
 	[L0] = {	
 		.fclk       = 1200000,
@@ -308,8 +311,10 @@ static void s5pv210_cpufreq_clksrcs_MPLL2APLL(unsigned int index,
 	 * 2. Turn on APLL
 	 * 2-1. Set PMS values
 	 */
+
+//Fixed up the 1200mhz overclock (Thanks netarchy!)
 	if (index == L0)
-		/* APLL FOUT becomes 1000 Mhz */
+		/* APLL FOUT becomes 1200 Mhz */
 		__raw_writel(PLL45XX_APLL_VAL_1200, S5P_APLL_CON);
 	else if(index == L1)
 		__raw_writel(PLL45XX_APLL_VAL_1000, S5P_APLL_CON);
@@ -425,7 +430,8 @@ static int s5pv210_cpufreq_target(struct cpufreq_policy *policy,
 	 */
 	if (s3c_freqs.freqs.new == s3c_freqs.freqs.old && !first_run)
 		goto out;
-
+//Subtract the voltage in the undervolt table before supplying it to the cpu
+//Got to multiply by 1000 to account for the conversion between SGS and NS
 	arm_volt = (dvs_conf[index].arm_volt - (exp_UV_mV[index]*1000));
 	//arm_volt = dvs_conf[index].arm_volt;
 	int_volt = dvs_conf[index].int_volt;
@@ -614,6 +620,7 @@ static int s5pv210_cpufreq_target(struct cpufreq_policy *policy,
 	memcpy(&s3c_freqs.old, &s3c_freqs.new, sizeof(struct s3c_freq));
 	cpufreq_debug_printk(CPUFREQ_DEBUG_DRIVER, KERN_INFO,
 			"cpufreq: Performance changed[L%d]\n", index);
+//more uv
 	previous_arm_volt = (dvs_conf[index].arm_volt - (exp_UV_mV[index] * 1000));
 
 	if (first_run)
@@ -657,6 +664,7 @@ static int s5pv210_cpufreq_resume(struct cpufreq_policy *policy)
 
 	memcpy(&s3c_freqs.old, &clk_info[level],
 			sizeof(struct s3c_freq));
+//even more uv
 	previous_arm_volt = (dvs_conf[level].arm_volt - (exp_UV_mV[level]*1000));
 
 	return ret;
@@ -725,9 +733,11 @@ static int __init s5pv210_cpufreq_driver_init(struct cpufreq_policy *policy)
 
 	memcpy(&s3c_freqs.old, &clk_info[level],
 			sizeof(struct s3c_freq));
+//is dat some more uv?
 	previous_arm_volt = (dvs_conf[level].arm_volt - (exp_UV_mV[level]*1000));
 
 	cpufreq_frequency_table_cpuinfo(policy, freq_table);
+//Set initial max speed to 1ghz for people who don't want to overclock
 	policy->max = 1000000;
 	policy->min = 100000;
 	return 0;

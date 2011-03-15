@@ -73,7 +73,7 @@ static ssize_t name##_store(struct device *dev, struct device_attribute *attr, c
   return size; \
 }
 
-#define DECLARE_WM8994(codec) struct wm8994_priv *wm8994 = codec->private_data;
+#define DECLARE_WM8994(codec) struct wm8994_priv *wm8994 = codec->drvdata;
 
 
 #ifdef CONFIG_SND_VOODOO_HP_LEVEL_CONTROL
@@ -151,7 +151,7 @@ void update_fm_radio_headset_restore_freqs(bool with_mute)
 	}
 }
 
-void update_fm_radio_headset_normalize_gain(bool_with_mute)
+void update_fm_radio_headset_normalize_gain(bool with_mute)
 {
 	// apply only when FM radio is active
  	DECLARE_WM8994(codec_)
@@ -185,7 +185,7 @@ void update_fm_radio_headset_normalize_gain(bool_with_mute)
 
 
 #ifdef CONFIG_SND_VOODOO_RECORD_PRESETS
-void update_recording_preset(bool_with_mute)
+void update_recording_preset(bool with_mute)
 {	
 	if(is_path(MAIN_MICROPHONE) {
 	switch (recording_preset)
@@ -265,6 +265,7 @@ bool is_path(int unified_path)
 	// speaker
         case SPEAKER:	
 	if (wm8994->cur_path != SPK && wm8994->cur_path != RING_SPK)
+		return true;
  	
 	// headphones
 
@@ -273,14 +274,13 @@ bool is_path(int unified_path)
 	
 	case HEADPHONES:
  
-        if (wm8994->cur_path == HP || wm8994->fmradio_path == FMR_HP)
+        if (wm8994->cur_path == HP)//we have no fmradio || wm8994->fmradio_path == FMR_HP)
 		return true;
-	}
 	
 	case MAIN_MICROPHONE: 
 		if (wm8994->rec_path == MAIN)
 			return true;	
-	
+	}
 	return false;
 }
 
@@ -300,7 +300,7 @@ unsigned short osr128_get_value(unsigned short val)
 	return val;
 }
 
-void update_osr128(bool_with_mute)
+void update_osr128(bool with_mute)
 {
 	unsigned short val;
 	val = osr128_get_value(wm8994_read(codec_, WM8994_OVERSAMPLING));
@@ -317,7 +317,7 @@ unsigned short fll_tuning_get_value(unsigned short val)
 	return val;
 }
 
-void update_fll_tuning(bool_with_mute)
+void update_fll_tuning(bool with_mute)
 {
 	unsigned short val;
 	val = fll_tuning_get_value(wm8994_read(codec_, WM8994_FLL1_CONTROL_4));
@@ -329,7 +329,7 @@ void update_fll_tuning(bool_with_mute)
 
 unsigned short mono_downmix_get_value(unsigned short val)
 {
-    if(is_path(speaker))
+    if(is_path(SPEAKER))
   	{
     	if (mono_downmix)
       		val |= WM8994_AIF1DAC1_MONO;
@@ -339,7 +339,7 @@ unsigned short mono_downmix_get_value(unsigned short val)
 }
 
 
-void update_mono_downmix()
+void update_mono_downmix(bool with_mute)
 {
 	unsigned short val1, val2, val3;
 	val1 = mono_downmix_get_value(wm8994_read(codec_, WM8994_AIF1_DAC1_FILTERS_1));
@@ -442,7 +442,7 @@ DECLARE_BOOL_STORE_UPDATE_WITH_MUTE(fll_tuning, update_fll_tuning, false)
 DECLARE_BOOL_SHOW(mono_downmix)
 DECLARE_BOOL_STORE_UPDATE_WITH_MUTE(mono_downmix, update_mono_downmix, false)
 DECLARE_BOOL_SHOW(dac_direct)
-DECLARE_BOOL_STORE(dac_direct, update_dac_direct, false)
+DECLARE_BOOL_STORE_UPDATE_WITH_MUTE(dac_direct, update_dac_direct, false)
 
  
 #ifdef CONFIG_SND_VOODOO_DEBUG

@@ -33,7 +33,7 @@ config SND_VOODOO_FM
 	  Adds a control to enable or disable the high-pass filter on FM radio
 
 config SND_VOODOO_RECORD_PRESETS
-	bool "Microphone recording presets" if SND_ARIES_WM8994=y || SND_UNIVERSAL_WM8994=y
+	bool "Microphone recording presets"
   	depends on SND_VOODOO
 	default n
 

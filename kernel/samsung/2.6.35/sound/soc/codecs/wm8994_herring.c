@@ -1321,6 +1321,7 @@ void wm8994_record_main_mic(struct snd_soc_codec *codec)
 	else
 		wm8994_set_codec_gain(codec, RECORDING_MODE, RECORDING_MAIN);
 
+//voodoo sound
 #ifdef CONFIG_SND_VOODOO_RECORD_PRESETS
 	voodoo_hook_record_main_mic();
 #endif

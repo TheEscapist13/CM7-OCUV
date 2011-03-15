@@ -1,3 +1,4 @@
+#voodoo sound kconfig
 menuconfig SND_VOODOO
 	bool "Voodoo sound driver"
 	depends on SND_UNIVERSAL_WM8994 || SND_S3C24XX_SOC

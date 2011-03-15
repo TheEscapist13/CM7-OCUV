@@ -10,6 +10,7 @@
  *
  */
 
+//voodoo sound
 #include <sound/soc.h>
 #include <sound/soc-dapm.h>
 #include <linux/delay.h>

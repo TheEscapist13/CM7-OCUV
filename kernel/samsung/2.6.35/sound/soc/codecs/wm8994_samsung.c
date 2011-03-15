@@ -40,6 +40,7 @@
 #include <plat/gpio-cfg.h>
 #include <mach/regs-clock.h>
 #include "wm8994_samsung.h"
+//voodoo sound
 #include "wm8994_voodoo.h"
 
 #define WM8994_VERSION "0.1"
@@ -175,6 +176,7 @@ int wm8994_write(struct snd_soc_codec *codec, unsigned int reg,
 	u8 data[4];
 	int ret;
 
+//voodoo sound
 #ifdef CONFIG_SND_VOODOO
 	value = voodoo_hook_wm8994_write(codec, reg, value);
 #endif
@@ -3016,6 +3018,7 @@ static int wm8994_i2c_probe(struct i2c_client *i2c,
 	control_data1 = i2c;
 
 	ret = wm8994_init(wm8994_priv, pdata);
+//voodoo sound
 #ifdef CONFIG_SND_VOODOO
 	voodoo_hook_wm8994_pcm_probe(codec);
 #endif

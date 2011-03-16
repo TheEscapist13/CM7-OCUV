@@ -25,4 +25,9 @@ void update_dac_direct(bool with_mute);
 void update_mono_downmix(bool with_mute);
 bool is_path(int unified_path);
 
+#ifdef CONFIG_SAMSUNG_CAPTIVATE
+#define NEXUS_S
+#endif
+//Yeah, it's bad, but if it fixes it...
+
 enum unified_path { HEADPHONES, SPEAKER, MAIN_MICROPHONE };

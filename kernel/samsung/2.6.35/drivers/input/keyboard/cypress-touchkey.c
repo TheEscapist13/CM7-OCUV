@@ -40,6 +40,11 @@
 
 #define DEVICE_NAME "cypress-touchkey"
 
+#ifdef CONFIG_BACKLIGHT_NOTIFICATION
+bool bln_enabled = true;
+bool notification = false;
+#endif
+
 struct cypress_touchkey_devdata {
 	struct i2c_client *client;
 	struct input_dev *input_dev;
@@ -55,7 +60,7 @@ struct cypress_touchkey_devdata {
 static int i2c_touchkey_read_byte(struct cypress_touchkey_devdata *devdata,
 					u8 *val)
 {
-	printk("cypress: i2c_touchkey_read_byte\n");
+	//printk("cypress: i2c_touchkey_read_byte\n");
 	int ret;
 	int retry = 2;
 
@@ -78,7 +83,7 @@ static int i2c_touchkey_read_byte(struct cypress_touchkey_devdata *devdata,
 static int i2c_touchkey_write_byte(struct cypress_touchkey_devdata *devdata,
 					u8 val)
 {
-	printk("cypress: i2c_touchkey_write_byte\n");
+	//printk("cypress: i2c_touchkey_write_byte\n");
 	int ret;
 	int retry = 2;
 
@@ -99,7 +104,7 @@ static int i2c_touchkey_write_byte(struct cypress_touchkey_devdata *devdata,
 static void all_keys_up(struct cypress_touchkey_devdata *devdata)
 {
 	int i;
-	printk(" cypress: all_keys_up");
+	//printk(" cypress: all_keys_up");
 
 	for (i = 0; i < devdata->pdata->keycode_cnt; i++)
 		input_report_key(devdata->input_dev,
@@ -111,7 +116,7 @@ static void all_keys_up(struct cypress_touchkey_devdata *devdata)
 static int recovery_routine(struct cypress_touchkey_devdata *devdata)
 {
 	//dev_err(&devdata->client->dev, "%s: recovery_routine\n", __func__);
-	printk("cypress: recovery_routine\n");
+	//printk("cypress: recovery_routine\n");
 	int ret = -1;
 	int retry = 10;
 	u8 data;
@@ -192,7 +197,7 @@ err:
 static irqreturn_t touchkey_interrupt_handler(int irq, void *touchkey_devdata)
 {
 	struct cypress_touchkey_devdata *devdata = touchkey_devdata;
-	printk("cypress: touchkey_interrupt_handler\n");
+	//printk("cypress: touchkey_interrupt_handler\n");
 
 /*		dev_err(&devdata->client->dev, "%s: touchkey_interrupt_handler\n", __func__);
 */
@@ -208,7 +213,7 @@ static irqreturn_t touchkey_interrupt_handler(int irq, void *touchkey_devdata)
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static void cypress_touchkey_early_suspend(struct early_suspend *h)
 {
-	printk("cypress: touchkey_early_suspend");
+	printk("cypress: touchkey_early_suspend\n");
 	struct cypress_touchkey_devdata *devdata =
 		container_of(h, struct cypress_touchkey_devdata, early_suspend);
 
@@ -217,8 +222,25 @@ static void cypress_touchkey_early_suspend(struct early_suspend *h)
 	if (unlikely(devdata->is_dead))
 		return;
 
+#ifdef CONFIG_BACKLIGHT_NOTIFICATION
+	//if bln isn't enabled, turn the touchkey off
+	if(!bln_enabled) {
+		disable_irq(devdata->client->irq);
+		devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
+	//else, check if there is any notifications
+	else {
+		//Do we have any notifications?
+		notification = hasNotification();
+		if(notification) {
+			if(i2c_touchkey_write_byte(devdata, OLD_BACKLIGHT_ON) {
+				printk("cypress bln: failed to turn backlights on");
+			}
+		}
+#else
 	disable_irq(devdata->client->irq);
 	devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
+#endif
+	
 
 	all_keys_up(devdata);
 }
@@ -246,7 +268,7 @@ static void cypress_touchkey_early_resume(struct early_suspend *h)
 static int cypress_touchkey_probe(struct i2c_client *client,
 		const struct i2c_device_id *id)
 {
-	printk("cypress: touchkey_probe\n");
+	//printk("cypress: touchkey_probe\n");
 	struct device *dev = &client->dev;
 	struct input_dev *input_dev;
 	struct cypress_touchkey_devdata *devdata;
@@ -364,6 +386,12 @@ err_null_keycodes:
 	kfree(devdata);
 	return err;
 }
+
+#ifdef CONFIG_BACKLIGHT_NOTIFICATION
+bool hasNotification() {
+	return true;
+}
+#endif
 
 static int __devexit i2c_touchkey_remove(struct i2c_client *client)
 {

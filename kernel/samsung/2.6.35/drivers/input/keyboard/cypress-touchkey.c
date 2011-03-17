@@ -55,6 +55,7 @@ struct cypress_touchkey_devdata {
 static int i2c_touchkey_read_byte(struct cypress_touchkey_devdata *devdata,
 					u8 *val)
 {
+	printk("cypress: i2c_touchkey_read_byte\n");
 	int ret;
 	int retry = 2;
 
@@ -77,6 +78,7 @@ static int i2c_touchkey_read_byte(struct cypress_touchkey_devdata *devdata,
 static int i2c_touchkey_write_byte(struct cypress_touchkey_devdata *devdata,
 					u8 val)
 {
+	printk("cypress: i2c_touchkey_write_byte\n");
 	int ret;
 	int retry = 2;
 
@@ -97,6 +99,7 @@ static int i2c_touchkey_write_byte(struct cypress_touchkey_devdata *devdata,
 static void all_keys_up(struct cypress_touchkey_devdata *devdata)
 {
 	int i;
+	printk(" cypress: all_keys_up");
 
 	for (i = 0; i < devdata->pdata->keycode_cnt; i++)
 		input_report_key(devdata->input_dev,
@@ -108,6 +111,7 @@ static void all_keys_up(struct cypress_touchkey_devdata *devdata)
 static int recovery_routine(struct cypress_touchkey_devdata *devdata)
 {
 	//dev_err(&devdata->client->dev, "%s: recovery_routine\n", __func__);
+	printk("cypress: recovery_routine\n");
 	int ret = -1;
 	int retry = 10;
 	u8 data;
@@ -146,6 +150,7 @@ out:
 static irqreturn_t touchkey_interrupt_thread(int irq, void *touchkey_devdata)
 {
 	u8 data;
+	printk("cypress: touchkey_interrupt_thread\n"); 
 	int i;
 	int ret;
 	int scancode;
@@ -187,6 +192,7 @@ err:
 static irqreturn_t touchkey_interrupt_handler(int irq, void *touchkey_devdata)
 {
 	struct cypress_touchkey_devdata *devdata = touchkey_devdata;
+	printk("cypress: touchkey_interrupt_handler\n");
 
 /*		dev_err(&devdata->client->dev, "%s: touchkey_interrupt_handler\n", __func__);
 */
@@ -202,6 +208,7 @@ static irqreturn_t touchkey_interrupt_handler(int irq, void *touchkey_devdata)
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static void cypress_touchkey_early_suspend(struct early_suspend *h)
 {
+	printk("cypress: touchkey_early_suspend");
 	struct cypress_touchkey_devdata *devdata =
 		container_of(h, struct cypress_touchkey_devdata, early_suspend);
 
@@ -218,6 +225,7 @@ static void cypress_touchkey_early_suspend(struct early_suspend *h)
 
 static void cypress_touchkey_early_resume(struct early_suspend *h)
 {
+	printk("cypress: touchkey_early_resume\n");
 	struct cypress_touchkey_devdata *devdata =
 		container_of(h, struct cypress_touchkey_devdata, early_suspend);
 
@@ -238,6 +246,7 @@ static void cypress_touchkey_early_resume(struct early_suspend *h)
 static int cypress_touchkey_probe(struct i2c_client *client,
 		const struct i2c_device_id *id)
 {
+	printk("cypress: touchkey_probe\n");
 	struct device *dev = &client->dev;
 	struct input_dev *input_dev;
 	struct cypress_touchkey_devdata *devdata;

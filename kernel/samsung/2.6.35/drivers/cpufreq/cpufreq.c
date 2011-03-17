@@ -33,7 +33,7 @@
 						"cpufreq-core", msg)
 
 int exp_UV_mV[8]; //For uv
-extern int freq_uv_table[8][3];
+extern unsigned int freq_uv_table[8][3];
 
 /**
  * The "cpufreq driver" - the arch- or hardware-dependent low

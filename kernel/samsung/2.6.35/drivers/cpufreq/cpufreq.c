@@ -33,6 +33,7 @@
 						"cpufreq-core", msg)
 
 int exp_UV_mV[7]; //For uv
+extern int freq_uv_table[7][3];
 
 /**
  * The "cpufreq driver" - the arch- or hardware-dependent low
@@ -669,6 +670,21 @@ static ssize_t store_UV_mV_table(struct cpufreq_policy *policy,
 		return count;
 }
 
+static ssize_t show_frequency_voltage_table(struct cpufreq_policy *policy,
+						char *buf) {
+	
+	return sprintf(buf,
+	"%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n",
+	freq_uv_table[0][0], freq_uv_table[0][1], freq_uv_table[0][2],
+	freq_uv_table[1][0], freq_uv_table[1][1], freq_uv_table[1][2],
+	freq_uv_table[2][0], freq_uv_table[2][1], freq_uv_table[2][2],
+	freq_uv_table[3][0], freq_uv_table[3][1], freq_uv_table[3][2],
+	freq_uv_table[4][0], freq_uv_table[4][1], freq_uv_table[4][2],
+	freq_uv_table[5][0], freq_uv_table[5][1], freq_uv_table[5][2],
+	freq_uv_table[6][0], freq_uv_table[6][1], freq_uv_table[6][2]);
+
+}
+
 /**
  * show_scaling_driver - show the current cpufreq HW/BIOS limitation
  */
@@ -696,6 +712,7 @@ cpufreq_freq_attr_ro(scaling_cur_freq);
 cpufreq_freq_attr_ro(bios_limit);
 cpufreq_freq_attr_ro(related_cpus);
 cpufreq_freq_attr_ro(affected_cpus);
+cpufreq_freq_attr_ro(frequency_voltage_table);
 cpufreq_freq_attr_rw(scaling_min_freq);
 cpufreq_freq_attr_rw(scaling_max_freq);
 cpufreq_freq_attr_rw(scaling_governor);
@@ -717,6 +734,7 @@ static struct attribute *default_attrs[] = {
 	&scaling_setspeed.attr,
 //and here too
 	&UV_mV_table.attr,
+	&frequency_voltage_table.attr,
 	NULL
 };
 

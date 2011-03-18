@@ -42,7 +42,7 @@
 
 #ifdef CONFIG_BACKLIGHT_NOTIFICATION
 bool bln_enabled = true;
-bool notification = false;
+bool notification = true;
 #endif
 
 struct cypress_touchkey_devdata {
@@ -227,16 +227,23 @@ static void cypress_touchkey_early_suspend(struct early_suspend *h)
 	if(!bln_enabled) {
 		disable_irq(devdata->client->irq);
 		devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
+		printk("cypress: Touchkey off");
+	}
 	//else, check if there is any notifications
 	else {
+		printk("cypress: Touchkey on");
 		//Do we have any notifications?
-		notification = hasNotification();
+		//notification = hasNotification();
 		if(notification) {
-			if(i2c_touchkey_write_byte(devdata, OLD_BACKLIGHT_ON) {
+			if(i2c_touchkey_write_byte(devdata, devdata->backlight_on)) {
 				printk("cypress bln: failed to turn backlights on");
 			}
+			else
+				printk("cypress: Backlights on");
 		}
+	}
 #else
+	printk("cypress: something went horribly wrong");
 	disable_irq(devdata->client->irq);
 	devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
 #endif
@@ -387,11 +394,13 @@ err_null_keycodes:
 	return err;
 }
 
+/*
 #ifdef CONFIG_BACKLIGHT_NOTIFICATION
 bool hasNotification() {
 	return true;
 }
 #endif
+*/
 
 static int __devexit i2c_touchkey_remove(struct i2c_client *client)
 {

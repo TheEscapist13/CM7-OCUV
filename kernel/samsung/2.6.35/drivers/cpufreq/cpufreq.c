@@ -33,7 +33,8 @@
 						"cpufreq-core", msg)
 
 int exp_UV_mV[8]; //For uv
-extern unsigned int freq_uv_table[8][3];
+//extern unsigned int freq_uv_table[8][3];
+int enabled_freqs[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
 
 /**
  * The "cpufreq driver" - the arch- or hardware-dependent low
@@ -670,6 +671,7 @@ static ssize_t store_UV_mV_table(struct cpufreq_policy *policy,
 		return count;
 }
 
+/*
 static ssize_t show_frequency_voltage_table(struct cpufreq_policy *policy,
 						char *buf) {
 	
@@ -685,7 +687,7 @@ static ssize_t show_frequency_voltage_table(struct cpufreq_policy *policy,
 	freq_uv_table[7][0], freq_uv_table[7][1], freq_uv_table[7][2]);
 
 }
-
+*/
 /**
  * show_scaling_driver - show the current cpufreq HW/BIOS limitation
  */
@@ -701,6 +703,27 @@ static ssize_t show_bios_limit(struct cpufreq_policy *policy, char *buf)
 	return sprintf(buf, "%u\n", policy->cpuinfo.max_freq);
 }
 
+static ssize_t show_states_enabled_table(struct cpufreq_policy *policy, char *buf) {
+
+	return sprintf(buf, "%d %d %d %d %d %d %d %d", enabled_freqs[0], enabled_freqs[1], enabled_freqs[2], enabled_freqs[3], enabled_freqs[4], enabled_freqs[5], enabled_freqs[6], enabled_freqs[7]);
+
+}
+
+static ssize_t store_states_enabled_table(struct cpufreq_policy *policy, const char *buf, int count) {
+
+	
+	unsigned int ret = -EINVAL;
+
+	ret = sscanf(buf, "%d %d %d %d %d %d %d %d", &enabled_freqs[0], &enabled_freqs[1], &enabled_freqs[2], &enabled_freqs[3], &enabled_freqs[4], &enabled_freqs[5], &enabled_freqs[6], &enabled_freqs[7]);
+	if(ret != 1) {
+		return -EINVAL;
+	}
+	else
+		return count;
+
+}
+	
+
 
 
 cpufreq_freq_attr_ro_perm(cpuinfo_cur_freq, 0400);
@@ -713,13 +736,14 @@ cpufreq_freq_attr_ro(scaling_cur_freq);
 cpufreq_freq_attr_ro(bios_limit);
 cpufreq_freq_attr_ro(related_cpus);
 cpufreq_freq_attr_ro(affected_cpus);
-cpufreq_freq_attr_ro(frequency_voltage_table);
+//cpufreq_freq_attr_ro(frequency_voltage_table);
 cpufreq_freq_attr_rw(scaling_min_freq);
 cpufreq_freq_attr_rw(scaling_max_freq);
 cpufreq_freq_attr_rw(scaling_governor);
 cpufreq_freq_attr_rw(scaling_setspeed);
 //add it as an attribute
 cpufreq_freq_attr_rw(UV_mV_table);
+cpufreq_freq_attr_rw(states_enabled_table);
 
 static struct attribute *default_attrs[] = {
 	&cpuinfo_min_freq.attr,
@@ -733,9 +757,9 @@ static struct attribute *default_attrs[] = {
 	&scaling_driver.attr,
 	&scaling_available_governors.attr,
 	&scaling_setspeed.attr,
-//and here too
 	&UV_mV_table.attr,
-	&frequency_voltage_table.attr,
+//	&frequency_voltage_table.attr,
+	&states_enabled_table.attr,
 	NULL
 };
 

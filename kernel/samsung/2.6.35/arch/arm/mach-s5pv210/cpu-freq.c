@@ -52,6 +52,7 @@ static unsigned int apll_freq_max; /* in MHz */
 static DEFINE_MUTEX(set_freq_lock);
 
 /* frequency */
+
 static struct cpufreq_frequency_table freq_table[] = {
 	{L0, 1300*1000},
 	{L1, 1200*1000}, //Added additional frequency here
@@ -67,15 +68,17 @@ static struct cpufreq_frequency_table freq_table[] = {
 extern int exp_UV_mV[8]; //Needed for uv
 unsigned int freq_uv_table[8][3] = {
 	//freq, stock, current
-	{1300,	1350,	1350},
+	{1300,	1325,	1325},
 	{1200,	1300,	1300},
 	{1000,	1250,	1250},
 	{800,	1200,	1200},
-	{600,	1150,	1150},
+	{600,	1200,	1200},
 	{400,	1050,	1050},
 	{200,	950,	950},
 	{100,	950,	950},
 };
+//extern int enabled_freqs[8];
+//extern int update_states = 0;
 	
 
 struct s5pv210_dvs_conf {
@@ -89,7 +92,7 @@ const unsigned long int_volt_max = 1250000;
 // added more voltage levels for the added frequencies
 static struct s5pv210_dvs_conf dvs_conf[] = {
 	[L0] = { 
-		.arm_volt   = 1300000,
+		.arm_volt   = 1325000,
 		.int_volt   = 1100000,
 	},
 	[L1] = {

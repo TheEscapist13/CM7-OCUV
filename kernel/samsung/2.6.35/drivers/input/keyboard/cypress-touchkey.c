@@ -226,26 +226,29 @@ static void cypress_touchkey_early_suspend(struct early_suspend *h)
 
 #ifdef CONFIG_BACKLIGHT_NOTIFICATION
 	//if bln isn't enabled, turn the touchkey off
-	if(!bln_enabled) {
+	if(bln_enabled == false) {
 		disable_irq(devdata->client->irq);
 		devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
-		//printk("cypress: Touchkey off");
+		printk("cypress: Touchkey off");
 		sleep = true;
-	}
-	else
-		//printk("cypress: Touchkey on\n");
-		if(i2c_touchkey_write_byte(devdata, devdata->backlight_off))
-			printk("cypress: error: touchkey on, lights on\n");
 
-//	printk("cypress: something went horribly wrong");
-	disable_irq(devdata->client->irq);
-	devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
+	}
+	else if(bln_enabled) {
+		printk("cypress: Touchkey on\n");
+		if(i2c_touchkey_write_byte(devdata, devdata->backlight_off)) {
+			printk("cypress: error: touchkey on, lights on\n");
+		}
+	} else {
+		printk("cypress: something went horribly wrong");
+		disable_irq(devdata->client->irq);
+		devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
+	}
 #endif
 	
 
 	all_keys_up(devdata);
 	sleep = true;
-//	printk("cypress: sleep == true\n");
+	printk("cypress: sleep == true\n");
 }
 
 static void cypress_touchkey_early_resume(struct early_suspend *h)
@@ -265,7 +268,7 @@ static void cypress_touchkey_early_resume(struct early_suspend *h)
 	enable_irq(devdata->client->irq);
 	devdata->is_powering_on = false;
 #ifdef CONFIG_BACKLIGHT_NOTIFICATION
-//	printk("cypress: sleep == false\n");
+	printk("cypress: sleep == false\n");
 	sleep = false;
 }
 #endif
@@ -274,7 +277,7 @@ static void cypress_touchkey_early_resume(struct early_suspend *h)
 static int cypress_touchkey_probe(struct i2c_client *client,
 		const struct i2c_device_id *id)
 {
-	//printk("cypress: touchkey_probe\n");
+	printk("cypress: touchkey_probe\n");
 	struct device *dev = &client->dev;
 	struct input_dev *input_dev;
 	u8 data[3];
@@ -399,13 +402,14 @@ err_null_keycodes:
 static void enable_led_notification(void){
 	BacklightNotification_ongoing = true;
 	if (bln_enabled && sleep == true){
-			if((i2c_touchkey_write_byte(devdata, devdata->backlight_on))) {
+			//printk("cypress: devdata->backlight_on: %d\n", devdata->backlight_on);
+			if(i2c_touchkey_write_byte(devdata, devdata->backlight_on)) {
 				printk("cypress: error: could not turn on keys\n");
 			}
 			else {
 				printk(KERN_DEBUG "%s: notification led enabled\n", __FUNCTION__);
 			}
-		}
+	}
 	else if (bln_enabled && sleep == false) {
 		printk(KERN_DEBUG "%s: cannot set notification led, touchkeys are enabled\n",__FUNCTION__);
 	}
@@ -493,7 +497,7 @@ static ssize_t blink_control_read(struct device *dev, struct device_attribute *a
 
 static ssize_t blink_control_write(struct device *dev, struct device_attribute *attr, const char *buf, size_t size)
 {
-	unsigned int data;
+/*	unsigned int data;
 
 	if(sscanf(buf, "%u\n", &data) == 1) {
 		if(data == 0 || data == 1){
@@ -514,7 +518,7 @@ static ssize_t blink_control_write(struct device *dev, struct device_attribute *
 			printk(KERN_DEBUG "%s: wrong input %u\n", __FUNCTION__, data);
 	} else
 		printk("%s: input error\n", __FUNCTION__);
-
+*/
 	return size;
 }
 

@@ -1495,7 +1495,7 @@ void wm8994_set_playback_headset(struct snd_soc_codec *codec)
 	u8 testhigh = 0;
 
 	DEBUG_LOG("");
-	#if defined(CONFIG_SAMSUNG_CAPTIVATE)
+	#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT)
 	wm8994_earsel_control(wm8994->pdata, 1);
 	#else
 	wm8994_earsel_control(wm8994->pdata, 0);

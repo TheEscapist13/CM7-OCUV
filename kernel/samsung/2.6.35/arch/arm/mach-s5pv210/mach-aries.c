@@ -98,6 +98,9 @@
 
 #include "aries.h"
 
+//#undef pr_debug
+//#define pr_debug pr_info
+
 struct class *sec_class;
 EXPORT_SYMBOL(sec_class);
 
@@ -283,7 +286,7 @@ static struct s3cfb_lcd s6e63m0 = {
 	.p_width = 52,
 	.p_height = 86,
 	.bpp = 24,
-	.freq = 72,
+	.freq = 60,
 
 	.timing = {
 		.h_fp = 16,
@@ -309,14 +312,14 @@ static struct s3cfb_lcd nt35580 = {
 	.p_width = 52,
 	.p_height = 86,
 	.bpp = 24,
-	.freq = 72,
+	.freq = 60,
 	.timing = {
-		.h_fp = 16,
-		.h_bp = 16,
-		.h_sw = 2,
-		.v_fp = 28,
+		.h_fp = 10,
+		.h_bp = 20,
+		.h_sw = 10,
+		.v_fp = 6,
 		.v_fpe = 1,
-		.v_bp = 1,
+		.v_bp = 8,
 		.v_bpe = 1,
 		.v_sw = 2,
 	},
@@ -334,7 +337,7 @@ static struct s3cfb_lcd r61408 = {
 	.p_width = 52,
 	.p_height = 86,
 	.bpp = 24,
-	.freq = 68,
+	.freq = 60,
 	.timing = {
 		.h_fp = 100,
 		.h_bp = 2,
@@ -506,7 +509,7 @@ static struct regulator_consumer_supply ldo15_consumer[] = {
 };
 
 static struct regulator_consumer_supply ldo16_consumer[] = {
-	{	.supply	= "vga_avdd", },
+	{	.supply	= "cam_avdd", },
 };
 
 static struct regulator_consumer_supply ldo17_consumer[] = {
@@ -1571,6 +1574,7 @@ static void set_shared_mic_bias(void)
 
 static void wm8994_set_mic_bias(bool on)
 {
+    pr_debug("%s: on=%d\n", __func__, on ? 1 : 0);
 	if (system_rev < 0x09) {
 		unsigned long flags;
 		spin_lock_irqsave(&mic_bias_lock, flags);
@@ -1589,22 +1593,32 @@ static void sec_jack_set_micbias_state(bool on)
 		jack_mic_bias = on;
 		set_shared_mic_bias();
 		spin_unlock_irqrestore(&mic_bias_lock, flags);
-	} //else
+    } else {
+#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT)
+        pr_debug("%s: on=%d\n", __func__, on ? 1 : 0);
+		gpio_set_value(GPIO_EARPATH_SEL, on);
+		gpio_set_value(GPIO_EAR_MICBIAS_EN, on);
+#else
 	        //FIXME
 		//gpio_set_value(GPIO_EAR_MICBIAS_EN, on);
+#endif
+    }
 }
 
 static struct wm8994_platform_data wm8994_pdata = {
 	.ldo = GPIO_CODEC_LDO_EN,
+#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT)
+    .ear_sel = GPIO_EARPATH_SEL,
+#else
 	//FIXME
 	//.ear_sel = GPIO_EAR_SEL,
+#endif
 	.set_mic_bias = wm8994_set_mic_bias,
 };
 
 
 /* External camera module setting */
 static DEFINE_MUTEX(s5ka3dfx_lock);
-static struct regulator *s5ka3dfx_vga_avdd;
 static struct regulator *s5ka3dfx_vga_vddio;
 static struct regulator *s5ka3dfx_cam_isp_host;
 static struct regulator *s5ka3dfx_vga_dvdd;
@@ -1634,13 +1648,6 @@ static int s5ka3dfx_request_gpio(void)
 
 static int s5ka3dfx_power_init(void)
 {
-	if (IS_ERR_OR_NULL(s5ka3dfx_vga_avdd))
-		s5ka3dfx_vga_avdd = regulator_get(NULL, "vga_avdd");
-
-	if (IS_ERR_OR_NULL(s5ka3dfx_vga_avdd)) {
-		pr_err("Failed to get regulator vga_avdd\n");
-		return -EINVAL;
-	}
 
 	if (IS_ERR_OR_NULL(s5ka3dfx_vga_vddio))
 		s5ka3dfx_vga_vddio = regulator_get(NULL, "vga_vddio");
@@ -1679,13 +1686,20 @@ static int s5ka3dfx_power_on(void)
 		return -EINVAL;
 	}
 
-	/* Turn VGA_AVDD_2.8V on */
-	err = regulator_enable(s5ka3dfx_vga_avdd);
-	if (err) {
-		pr_err("Failed to enable regulator vga_avdd\n");
-		return -EINVAL;
+	/* CAM_IO_EN - GPB(7) */
+	err = gpio_request(GPIO_GPB7, "GPB7");
+
+	if(err) {
+		printk(KERN_ERR "failed to request GPB7 for camera control\n");
+
+		return err;
 	}
-	msleep(3);
+
+	// Turn CAM_ISP_SYS_2.8V on
+	gpio_direction_output(GPIO_GPB7, 0);
+	gpio_set_value(GPIO_GPB7, 1);
+
+	mdelay(1);
 
 	/* Turn VGA_VDDIO_2.8V on */
 	err = regulator_enable(s5ka3dfx_vga_vddio);
@@ -1710,7 +1724,7 @@ static int s5ka3dfx_power_on(void)
 	udelay(10);
 
 	/* Mclk enable */
-	s3c_gpio_cfgpin(GPIO_CAM_MCLK, S3C_GPIO_SFN(0x02));
+	s3c_gpio_cfgpin(GPIO_CAM_MCLK, S5PV210_GPE1_3_CAM_A_CLKOUT);
 	udelay(430);
 
 	/* Turn CAM_ISP_HOST_2.8V on */
@@ -1725,6 +1739,8 @@ static int s5ka3dfx_power_on(void)
 	gpio_direction_output(GPIO_CAM_VGA_nRST, 0);
 	gpio_set_value(GPIO_CAM_VGA_nRST, 1);
 	mdelay(5);
+
+	gpio_free(GPIO_GPB7);
 
 	return 0;
 off_cam_isp_host:
@@ -1745,11 +1761,6 @@ off_vga_dvdd:
 		result = err;
 	}
 off_vga_vddio:
-	err = regulator_disable(s5ka3dfx_vga_avdd);
-	if (err) {
-		pr_err("Failed to disable regulator vga_avdd\n");
-		result = err;
-	}
 
 	return result;
 }
@@ -1758,7 +1769,7 @@ static int s5ka3dfx_power_off(void)
 {
 	int err;
 
-	if (!s5ka3dfx_vga_avdd || !s5ka3dfx_vga_vddio ||
+	if ( !s5ka3dfx_vga_vddio ||
 		!s5ka3dfx_cam_isp_host || !s5ka3dfx_vga_dvdd) {
 		pr_err("Faild to get all regulator\n");
 		return -EINVAL;
@@ -1781,6 +1792,15 @@ static int s5ka3dfx_power_off(void)
 
 	udelay(1);
 
+	/* CAM_IO_EN - GPB(7) */
+	err = gpio_request(GPIO_GPB7, "GPB7");
+
+	if(err) {
+		printk(KERN_ERR "failed to request GPB7 for camera control\n");
+
+		return err;
+	}
+
 	/* Turn VGA_VDDIO_2.8V off */
 	err = regulator_disable(s5ka3dfx_vga_vddio);
 	if (err) {
@@ -1801,18 +1821,20 @@ static int s5ka3dfx_power_off(void)
 
 	udelay(1);
 
-	/* Turn VGA_AVDD_2.8V off */
-	err = regulator_disable(s5ka3dfx_vga_avdd);
-	if (err) {
-		pr_err("Failed to disable regulator vga_avdd\n");
-		return -EINVAL;
-	}
 
+
+
+	// Turn CAM_ISP_SYS_2.8V off
+	gpio_direction_output(GPIO_GPB7, 1);
+	gpio_set_value(GPIO_GPB7, 0);
+
+	gpio_free(GPIO_GPB7);
 	return err;
 }
 
 static int s5ka3dfx_power_en(int onoff)
 {
+
 	int err = 0;
 	mutex_lock(&s5ka3dfx_lock);
 	/* we can be asked to turn off even if we never were turned
@@ -1896,6 +1918,7 @@ static struct regulator *cam_isp_core_regulator;
 static struct regulator *cam_isp_host_regulator;
 static struct regulator *cam_af_regulator;
 static struct regulator *cam_sensor_regulator;
+static struct regulator *cam_avdd;
 static bool ce147_powered_on;
 static int ce147_regulator_init(void)
 {
@@ -1927,6 +1950,14 @@ static int ce147_regulator_init(void)
 			return -EINVAL;
 		}
 	}
+	if (IS_ERR_OR_NULL(cam_avdd)) {
+		cam_avdd = regulator_get(NULL, "cam_avdd");
+		if (IS_ERR_OR_NULL(cam_avdd)) {
+			pr_err("failed to get cam_avdd regulator");
+			return -EINVAL;
+		}
+	}
+
 	pr_debug("cam_isp_core_regulator = %p\n", cam_isp_core_regulator);
 	pr_debug("cam_isp_host_regulator = %p\n", cam_isp_host_regulator);
 	pr_debug("cam_af_regulator = %p\n", cam_af_regulator);
@@ -1936,9 +1967,6 @@ static int ce147_regulator_init(void)
 
 static void ce147_init(void)
 {
-	/* CAM_IO_EN - GPB(7) */
-	if (gpio_request(GPIO_GPB7, "GPB7") < 0)
-		pr_err("failed gpio_request(GPB7) for camera control\n");
 	/* CAM_MEGA_nRST - GPJ1(5) */
 	if (gpio_request(GPIO_CAM_MEGA_nRST, "GPJ1") < 0)
 		pr_err("failed gpio_request(GPJ1) for camera control\n");
@@ -1963,6 +1991,10 @@ static int ce147_ldo_en(bool en)
 	if (!en)
 		goto off;
 
+	/* CAM_IO_EN - GPB(7) */
+	if (gpio_request(GPIO_GPB7, "GPB7") < 0)
+		pr_err("failed gpio_request(GPB7) for camera control\n");
+
 	/* Turn CAM_ISP_CORE_1.2V(VDD_REG) on */
 	err = regulator_enable(cam_isp_core_regulator);
 	if (err) {
@@ -1974,6 +2006,14 @@ static int ce147_ldo_en(bool en)
 	/* Turn CAM_SENSOR_A_2.8V(VDDA) on */
 	gpio_set_value(GPIO_GPB7, 1);
 	mdelay(1);
+
+	/* Turn CAM_AVDD_2.8V on */
+	err = regulator_enable(cam_avdd);
+	if (err) {
+		pr_err("Failed to enable regulator cam_avdd\n");
+		return -EINVAL;
+	}
+	msleep(3);
 
 	/* Turn CAM_ISP_HOST_2.8V(VDDIO) on */
 	err = regulator_enable(cam_sensor_regulator);
@@ -1998,6 +2038,8 @@ static int ce147_ldo_en(bool en)
 		goto off;
 	}
 	udelay(50);
+	gpio_free(GPIO_GPB7);
+
 	return 0;
 
 off:
@@ -2023,6 +2065,14 @@ off:
 		pr_err("Failed to disable regulator cam_isp_core\n");
 		result = err;
 	}
+
+	/* Turn CAM_AVDD_2.8V off */
+	err = regulator_disable(cam_avdd);
+	if (err) {
+		pr_err("Failed to disable regulator cam_avdd\n");
+		result = err;
+	}
+
 	return result;
 }
 
@@ -2722,7 +2772,11 @@ struct sec_jack_platform_data sec_jack_pdata = {
 	.buttons_zones = sec_jack_buttons_zones,
 	.num_buttons_zones = ARRAY_SIZE(sec_jack_buttons_zones),
 	.det_gpio = GPIO_DET_35,
+#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT)
+	.send_end_gpio = GPIO_EAR_SEND_END35,
+#else
 	.send_end_gpio = GPIO_EAR_SEND_END,
+#endif
 };
 
 static struct platform_device sec_device_jack = {
@@ -3341,11 +3395,17 @@ static struct gpio_init_data aries_init_gpios[] = {
 		.val	= S3C_GPIO_SETPIN_ZERO,
 		.pud	= S3C_GPIO_PULL_NONE,
 		.drv	= S3C_GPIO_DRVSTR_1X,
-	}, {
+	}, { /* GPIO_SEND_END_35 */
 		.num	= S5PV210_GPH2(2),
+#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined (CONFIG_SAMSUNG_VIBRANT)
+		.cfg	= S3C_GPIO_INPUT,
+		.val	= S3C_GPIO_SETPIN_NONE,
+		.pud	= S3C_GPIO_PULL_DOWN,
+#else
 		.cfg	= S3C_GPIO_OUTPUT,
 		.val	= S3C_GPIO_SETPIN_ZERO,
 		.pud	= S3C_GPIO_PULL_NONE,
+#endif
 		.drv	= S3C_GPIO_DRVSTR_1X,
 	}, {
 		.num	= S5PV210_GPH2(3),
@@ -3425,9 +3485,15 @@ static struct gpio_init_data aries_init_gpios[] = {
 #endif
 	}, { /* GPIO_EAR_SEND_END */
 		.num	= S5PV210_GPH3(6),
+#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT)
+		.cfg	= S3C_GPIO_INPUT,
+		.val	= S3C_GPIO_SETPIN_NONE,
+		.pud	= S3C_GPIO_PULL_DOWN,
+#else
 		.cfg	= S3C_GPIO_SFN(GPIO_EAR_SEND_END_AF),
 		.val	= S3C_GPIO_SETPIN_NONE,
 		.pud	= S3C_GPIO_PULL_NONE,
+#endif
 		.drv	= S3C_GPIO_DRVSTR_1X,
 	}, {
 		.num	= S5PV210_GPH3(7),
@@ -3640,7 +3706,11 @@ static struct gpio_init_data aries_init_gpios[] = {
 		.drv	= S3C_GPIO_DRVSTR_1X,
 	}, {
 		.num	= S5PV210_GPJ2(6),
+#if defined(CONFIG_SAMSUNG_CAPTIVATE)
+		.cfg	= S3C_GPIO_OUTPUT,
+#else
 		.cfg	= S3C_GPIO_INPUT,
+#endif
 		.val	= S3C_GPIO_SETPIN_NONE,
 		.pud	= S3C_GPIO_PULL_DOWN,
 		.drv	= S3C_GPIO_DRVSTR_1X,
@@ -4200,10 +4270,6 @@ static unsigned int aries_sleep_gpio_table[][3] = {
 	/* Memory part ending and off part ending */
 };
 
-#ifdef CONFIG_KEYPAD_CYPRESS_TOUCH_USE_BLN
-extern bool BacklightNotification_ongoing;
-#endif
-
 void s3c_config_sleep_gpio_table(int array_size, unsigned int (*gpio_table)[3])
 {
 	u32 i, gpio;
@@ -4259,9 +4325,14 @@ void s3c_config_sleep_gpio(void)
 	s3c_gpio_cfgpin(S5PV210_GPH2(0), S3C_GPIO_INPUT);
 	s3c_gpio_setpull(S5PV210_GPH2(0), S3C_GPIO_PULL_DOWN);
 
+#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined (CONFIG_SAMSUNG_VIBRANT)
+	s3c_gpio_cfgpin(S5PV210_GPH2(2), S3C_GPIO_INPUT);
+	s3c_gpio_setpull(S5PV210_GPH2(2), S3C_GPIO_PULL_DOWN);
+#else
 	s3c_gpio_cfgpin(S5PV210_GPH2(2), S3C_GPIO_OUTPUT);
 	s3c_gpio_setpull(S5PV210_GPH2(2), S3C_GPIO_PULL_NONE);
 	gpio_set_value(S5PV210_GPH2(2), 0);
+#endif
 
 	s3c_gpio_cfgpin(S5PV210_GPH2(3), S3C_GPIO_OUTPUT);
 	s3c_gpio_setpull(S5PV210_GPH2(3), S3C_GPIO_PULL_NONE);
@@ -4818,9 +4889,13 @@ static void __init aries_machine_init(void)
 #endif
 
 	/* headset/earjack detection */
+#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT)
+    gpio_request(GPIO_EAR_MICBIAS_EN, "ear_micbias_enable");
+#else
 	//FIXME
 	//if (system_rev >= 0x09)	        
 		//gpio_request(GPIO_EAR_MICBIAS_EN, "ear_micbias_enable");
+#endif
 
 	gpio_request(GPIO_TOUCH_EN, "touch en");
 
@@ -4870,14 +4945,14 @@ static void __init aries_machine_init(void)
 	/* optical sensor */
 	gp2a_gpio_init();
 	i2c_register_board_info(11, i2c_devs11, ARRAY_SIZE(i2c_devs11));
-	
+
 	/* yamaha magnetic sensor */
 	i2c_register_board_info(12, i2c_devs12, ARRAY_SIZE(i2c_devs12));
 
 	/* panel */
 	spi_register_board_info(spi_board_info, ARRAY_SIZE(spi_board_info));
 	s3cfb_set_platdata(&tl2796_data);
-	
+
 #if defined(CONFIG_S5P_ADC)
 	s3c_adc_set_platdata(&s3c_adc_platform);
 #endif

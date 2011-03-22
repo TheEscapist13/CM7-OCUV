@@ -75,7 +75,7 @@ unsigned int freq_uv_table[8][3] = {
 	{600,	1200,	1200},
 	{400,	1050,	1050},
 	{200,	950,	950},
-	{100,	950,	950},
+	{100,	950,	950}
 };
 //extern int enabled_freqs[8];
 //extern int update_states = 0;

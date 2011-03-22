@@ -677,14 +677,14 @@ static ssize_t show_frequency_voltage_table(struct cpufreq_policy *policy,
 	
 	return sprintf(buf,
 	"%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n",
-	freq_uv_table[0][0], freq_uv_table[0][1], freq_uv_table[0][3],
-	freq_uv_table[1][0], freq_uv_table[1][1], freq_uv_table[1][3],
-	freq_uv_table[2][0], freq_uv_table[2][1], freq_uv_table[2][3],
-	freq_uv_table[3][0], freq_uv_table[3][1], freq_uv_table[3][3],
-	freq_uv_table[4][0], freq_uv_table[4][1], freq_uv_table[4][3],
-	freq_uv_table[5][0], freq_uv_table[5][1], freq_uv_table[5][3],
-	freq_uv_table[6][0], freq_uv_table[6][1], freq_uv_table[6][3],
-	freq_uv_table[7][0], freq_uv_table[7][1], freq_uv_table[7][3]);
+	freq_uv_table[0][0], freq_uv_table[0][1], freq_uv_table[0][2],
+	freq_uv_table[1][0], freq_uv_table[1][1], freq_uv_table[1][2],
+	freq_uv_table[2][0], freq_uv_table[2][1], freq_uv_table[2][2],
+	freq_uv_table[3][0], freq_uv_table[3][1], freq_uv_table[3][2],
+	freq_uv_table[4][0], freq_uv_table[4][1], freq_uv_table[4][2],
+	freq_uv_table[5][0], freq_uv_table[5][1], freq_uv_table[5][2],
+	freq_uv_table[6][0], freq_uv_table[6][1], freq_uv_table[6][2],
+	freq_uv_table[7][0], freq_uv_table[7][1], freq_uv_table[7][2]);
 
 }
 

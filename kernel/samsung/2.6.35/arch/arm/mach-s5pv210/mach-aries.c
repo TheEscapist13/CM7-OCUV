@@ -1458,6 +1458,7 @@ static void touch_keypad_gpio_init(void)
 
 static void touch_keypad_onoff(int onoff)
 {
+	gpio_direction_output(_3_GPIO_TOUCH_EN, onoff);
 
 	if (onoff == TOUCHKEY_OFF)
 		msleep(30);

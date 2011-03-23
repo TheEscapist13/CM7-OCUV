@@ -62,15 +62,14 @@ static unsigned int suspended;
  * The minimum amount of time to spend at a frequency before we can ramp down,
  * default is 45ms.
  */
-#define DEFAULT_RAMP_DOWN_RATE_NS 45000;
+#define DEFAULT_RAMP_DOWN_RATE_NS 90000;
 static unsigned long ramp_down_rate_ns;
 
 /*
  * When ramping up frequency jump to at least this frequency.
  */
-//This should fix the lag issues, by forcing it to start at a higher frequency.
-//For those of you not using the 1300 step, this should set it to your max instead.
-#define DEFAULT_UP_MIN_FREQ (1300*1000)
+
+#define DEFAULT_UP_MIN_FREQ (100*1000)
 static unsigned int up_min_freq;
 
 /*
@@ -79,7 +78,7 @@ static unsigned int up_min_freq;
  * to minimize wakeup issues.
  * Set sleep_max_freq=0 to disable this behavior.
  */
-#define DEFAULT_SLEEP_MAX_FREQ (400*1000)
+#define DEFAULT_SLEEP_MAX_FREQ (100*100)
 static unsigned int sleep_max_freq;
 
 /*
@@ -91,7 +90,8 @@ static unsigned int sample_rate_jiffies;
 /*
  * Max freqeuncy delta when ramping up.
  */
-#define DEFAULT_MAX_RAMP_UP (200 * 1000)
+
+#define DEFAULT_MAX_RAMP_UP (400 * 1000)
 static unsigned int max_ramp_up;
 
 /*

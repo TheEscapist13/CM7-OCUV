@@ -258,7 +258,7 @@ static void cypress_touchkey_early_resume(struct early_suspend *h)
 static int cypress_touchkey_probe(struct i2c_client *client,
 		const struct i2c_device_id *id)
 {
-	printk("cypress: touchkey_probe\n");
+	struct cypress_touchkey_devdata *devdata;
 	struct device *dev = &client->dev;
 	struct input_dev *input_dev;
 	u8 data[3];

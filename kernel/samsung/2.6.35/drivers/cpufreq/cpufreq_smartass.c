@@ -68,7 +68,9 @@ static unsigned long ramp_down_rate_ns;
 /*
  * When ramping up frequency jump to at least this frequency.
  */
-#define DEFAULT_UP_MIN_FREQ CONFIG_MSM_CPU_FREQ_ONDEMAND_MAX
+//This should fix the lag issues, by forcing it to start at a higher frequency.
+//For those of you not using the 1300 step, this should set it to your max instead.
+#define DEFAULT_UP_MIN_FREQ (1300*1000)
 static unsigned int up_min_freq;
 
 /*
@@ -77,7 +79,7 @@ static unsigned int up_min_freq;
  * to minimize wakeup issues.
  * Set sleep_max_freq=0 to disable this behavior.
  */
-#define DEFAULT_SLEEP_MAX_FREQ CONFIG_MSM_CPU_FREQ_ONDEMAND_MIN
+#define DEFAULT_SLEEP_MAX_FREQ (400*1000)
 static unsigned int sleep_max_freq;
 
 /*
@@ -89,19 +91,19 @@ static unsigned int sample_rate_jiffies;
 /*
  * Max freqeuncy delta when ramping up.
  */
-#define DEFAULT_MAX_RAMP_UP 176000
+#define DEFAULT_MAX_RAMP_UP (200 * 1000)
 static unsigned int max_ramp_up;
 
 /*
  * CPU freq will be increased if measured load > max_cpu_load;
  */
-#define DEFAULT_MAX_CPU_LOAD 80
+#define DEFAULT_MAX_CPU_LOAD 70
 static unsigned long max_cpu_load;
 
 /*
  * CPU freq will be decreased if measured load < min_cpu_load;
  */
-#define DEFAULT_MIN_CPU_LOAD 30
+#define DEFAULT_MIN_CPU_LOAD 20
 static unsigned long min_cpu_load;
 
 
@@ -195,7 +197,8 @@ static void cpufreq_idle(void)
 
 /*
  * Choose the cpu frequency based off the load. For now choose the minimum
- * frequency that will satisfy the load, which is not always the lower power.
+ * frequency that will satisfy the load, which is no
+t always the lower power.
  */
 static unsigned int cpufreq_smartass_calc_freq(unsigned int cpu, struct cpufreq_policy *policy)
 {

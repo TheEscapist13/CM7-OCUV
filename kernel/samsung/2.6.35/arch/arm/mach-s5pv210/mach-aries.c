@@ -1562,6 +1562,9 @@ static struct s3c_adc_mach_info s3c_adc_platform __initdata = {
 };
 #endif
 
+unsigned int HWREV;
+EXPORT_SYMBOL(HWREV);
+
 /* in revisions before 0.9, there is a common mic bias gpio */
 
 static DEFINE_SPINLOCK(mic_bias_lock);
@@ -1594,10 +1597,17 @@ static void sec_jack_set_micbias_state(bool on)
 		set_shared_mic_bias();
 		spin_unlock_irqrestore(&mic_bias_lock, flags);
     } else {
-#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT)
+#if defined(CONFIG_SAMSUNG_CAPTIVATE)
         pr_debug("%s: on=%d\n", __func__, on ? 1 : 0);
 		gpio_set_value(GPIO_EARPATH_SEL, on);
 		gpio_set_value(GPIO_EAR_MICBIAS_EN, on);
+#elif defined (CONFIG_SAMSUNG_VIBRANT)
+        pr_debug("%s: on=%d\n", __func__, on ? 1 : 0);
+		gpio_set_value(GPIO_EARPATH_SEL, on);
+        if((HWREV == 0x0A) || (HWREV == 0x0C) || (HWREV == 0x0D) || (HWREV == 0x0E) ) //0x0A:00, 0x0C:00, 0x0D:01, 0x0E:05
+            gpio_set_value(GPIO_MICBIAS_EN, on);
+        else
+            gpio_set_value(GPIO_MICBIAS_EN2, on);
 #else
 	        //FIXME
 		//gpio_set_value(GPIO_EAR_MICBIAS_EN, on);
@@ -1607,7 +1617,7 @@ static void sec_jack_set_micbias_state(bool on)
 
 static struct wm8994_platform_data wm8994_pdata = {
 	.ldo = GPIO_CODEC_LDO_EN,
-#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT)
+#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined (CONFIG_SAMSUNG_VIBRANT)
     .ear_sel = GPIO_EARPATH_SEL,
 #else
 	//FIXME
@@ -3485,7 +3495,7 @@ static struct gpio_init_data aries_init_gpios[] = {
 #endif
 	}, { /* GPIO_EAR_SEND_END */
 		.num	= S5PV210_GPH3(6),
-#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT)
+#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined (CONFIG_SAMSUNG_VIBRANT)
 		.cfg	= S3C_GPIO_INPUT,
 		.val	= S3C_GPIO_SETPIN_NONE,
 		.pud	= S3C_GPIO_PULL_DOWN,
@@ -3706,7 +3716,7 @@ static struct gpio_init_data aries_init_gpios[] = {
 		.drv	= S3C_GPIO_DRVSTR_1X,
 	}, {
 		.num	= S5PV210_GPJ2(6),
-#if defined(CONFIG_SAMSUNG_CAPTIVATE)
+#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT)
 		.cfg	= S3C_GPIO_OUTPUT,
 #else
 		.cfg	= S3C_GPIO_INPUT,
@@ -4680,9 +4690,6 @@ static struct platform_device *aries_devices[] __initdata = {
 	&sec_device_wifi,
 };
 
-unsigned int HWREV;
-EXPORT_SYMBOL(HWREV);
-
 static void __init aries_map_io(void)
 {
 	s5p_init_io(NULL, 0, S5P_VA_CHIPID);
@@ -4889,7 +4896,7 @@ static void __init aries_machine_init(void)
 #endif
 
 	/* headset/earjack detection */
-#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT)
+#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined (CONFIG_SAMSUNG_VIBRANT)
     gpio_request(GPIO_EAR_MICBIAS_EN, "ear_micbias_enable");
 #else
 	//FIXME
@@ -4945,14 +4952,14 @@ static void __init aries_machine_init(void)
 	/* optical sensor */
 	gp2a_gpio_init();
 	i2c_register_board_info(11, i2c_devs11, ARRAY_SIZE(i2c_devs11));
-
+	
 	/* yamaha magnetic sensor */
 	i2c_register_board_info(12, i2c_devs12, ARRAY_SIZE(i2c_devs12));
 
 	/* panel */
 	spi_register_board_info(spi_board_info, ARRAY_SIZE(spi_board_info));
 	s3cfb_set_platdata(&tl2796_data);
-
+	
 #if defined(CONFIG_S5P_ADC)
 	s3c_adc_set_platdata(&s3c_adc_platform);
 #endif

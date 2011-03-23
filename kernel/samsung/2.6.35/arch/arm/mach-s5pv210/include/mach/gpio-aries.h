@@ -484,7 +484,11 @@
 
 #define GPIO_FM_INT				S5PV210_GPJ2(4)
 
+#if !defined(CONFIG_SAMSUNG_VIBRANT)
 #define GPIO_FM_RST				S5PV210_GPJ2(5)
+#else
+#define GPIO_MICBIAS_EN2		S5PV210_GPJ2(5) //SGH-T959 REV0.5(HWREV = 0x0e) or 0.6 (HWREV = 0x0f)
+#endif
 
 #define GPIO_EARPATH_SEL		S5PV210_GPJ2(6)
 

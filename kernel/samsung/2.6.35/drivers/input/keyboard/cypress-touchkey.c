@@ -68,7 +68,7 @@ static int i2c_touchkey_read_byte(struct cypress_touchkey_devdata *devdata,
 					u8 *val)
 {
 	int ret;
-	int retry = 2;
+	int retry = 5;
 
 	while (true) {
 		ret = i2c_smbus_read_byte(devdata->client);
@@ -90,7 +90,7 @@ static int i2c_touchkey_write_byte(struct cypress_touchkey_devdata *devdata,
 					u8 val)
 {
 	int ret;
-	int retry = 2;
+	int retry = 5;
 
 	while (true) {
 		ret = i2c_smbus_write_byte(devdata->client, val);
@@ -206,7 +206,11 @@ static irqreturn_t touchkey_interrupt_handler(int irq, void *touchkey_devdata)
 */
 	if (devdata->is_powering_on) {
 		dev_err(&devdata->client->dev, "%s: ignoring spurious boot "
-					"interrupt\n", __func__);	
+					"interrupt\n", __func__);
+		if(!BacklightNotification_ongoing) {	
+			i2c_touchkey_write_byte(devdata, devdata->backlight_off);
+			printk("cypress: turning off backlights because we have screen off and no notifications\n");
+		}	
 	
 		return IRQ_HANDLED;
 	}
@@ -426,6 +430,7 @@ static void disable_led_notification(void){
 	/* if touchkeys lights are not used for touchmode
 	 */
 	if (blndevdata->is_powering_on){
+		printk("cypress: disabling touchkey backlights\n");
 		disable_touchkey_backlights();
 		//power off the touchkey controller
 		blndevdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
@@ -435,7 +440,19 @@ static void disable_led_notification(void){
 	 * reconfigure gpio for sleep mode, this has to be done
 	 * independently from the power status
 	 */
+	printk("cypress: turning sleep mode on\n");
 	blndevdata->pdata->touchkey_sleep_onoff(TOUCHKEY_ON);
+
+	printk("sleeping for 10ms before turning on touchkey");
+	msleep(10);
+	
+	printk("cypress: turning on touchkey\n");
+	blndevdata->pdata->touchkey_onoff(TOUCHKEY_ON);
+	
+	if(!blndevdata->is_powering_on) {
+		printk("cypress: disabling touchkey backlights\n");
+		int ret = i2c_touchkey_write_byte(blndevdata, blndevdata->backlight_off);
+	}
 }
 
 static ssize_t backlightnotification_status_read(struct device *dev, struct device_attribute *attr, char *buf) {

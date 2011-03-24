@@ -56,7 +56,7 @@ struct cypress_touchkey_devdata {
 };
 
 #ifdef CONFIG_BACKLIGHT_NOTIFICATION
-bool bln_enabled = true;
+bool bln_enabled = false;
 bool BacklightNotification_ongoing = false;
 bool BLN_blink_enabled = false;
 #define BACKLIGHTNOTIFICATION_VERSION 8

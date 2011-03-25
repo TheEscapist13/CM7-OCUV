@@ -60,7 +60,7 @@ bool bln_enabled = false;
 bool BacklightNotification_ongoing = false;
 bool BLN_blink_enabled = false;
 #define BACKLIGHTNOTIFICATION_VERSION 8
-struct cypress_touchkey_devdata *devdata;
+struct cypress_touchkey_devdata *blndevdata;
 #endif
 
 
@@ -207,12 +207,12 @@ static irqreturn_t touchkey_interrupt_handler(int irq, void *touchkey_devdata)
 	if (devdata->is_powering_on) {
 		dev_err(&devdata->client->dev, "%s: ignoring spurious boot "
 					"interrupt\n", __func__);
-#ifdef CONFIG_BACKLIGHT_NOTIFICATION
+/*#ifdef CONFIG_BACKLIGHT_NOTIFICATION
 		if(!BacklightNotification_ongoing) {	
 			i2c_touchkey_write_byte(devdata, devdata->backlight_off);
 			printk("cypress: turning off backlights because we have screen off and no notifications\n");
 		}	
-#endif
+#endif*/
 		return IRQ_HANDLED;
 	}
 
@@ -264,9 +264,8 @@ static void cypress_touchkey_early_resume(struct early_suspend *h)
 static int cypress_touchkey_probe(struct i2c_client *client,
 		const struct i2c_device_id *id)
 {
-#ifndef CONFIG_BACKLIGHT_NOTIFICATION
+
 	struct cypress_touchkey_devdata *devdata;
-#endif
 	struct device *dev = &client->dev;
 	struct input_dev *input_dev;
 	u8 data[3];
@@ -368,6 +367,9 @@ static int cypress_touchkey_probe(struct i2c_client *client,
 	register_early_suspend(&devdata->early_suspend);
 
 	devdata->is_powering_on = false;
+#ifdef CONFIG_BACKLIGHT_NOTIFICATION
+	blndevdata = devdata;
+#endif
 
 
 	return 0;
@@ -387,31 +389,32 @@ err_null_keycodes:
 }
 
 #ifdef CONFIG_BACKLIGHT_NOTIFICATION
+
+static void touchkey_power_on(void){
+	blndevdata->pdata->touchkey_onoff(TOUCHKEY_ON);
+}
+
+static void touchkey_power_off(void){
+	blndevdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
+}
+
 static void enable_touchkey_backlights(void){
-	i2c_touchkey_write_byte(devdata, devdata->backlight_on);
+	i2c_touchkey_write_byte(blndevdata, blndevdata->backlight_on);
 }
 
 static void disable_touchkey_backlights(void){
-	i2c_touchkey_write_byte(devdata, devdata->backlight_off);
+	i2c_touchkey_write_byte(blndevdata, blndevdata->backlight_off);
 }
 
 static void enable_led_notification(void){
 	if (bln_enabled){
-		/*
-		 * is_powering_on signals whether touchkey lights are used for notifications or for touchmode
-		 */
-		if (devdata->is_powering_on){
+		if (blndevdata->is_powering_on){
+			touchkey_power_on();
 
-			//reconfigure gpio for sleep mode
-			devdata->pdata->touchkey_sleep_onoff(TOUCHKEY_ON);
-
-			//power on the touchkey controller
-			devdata->pdata->touchkey_onoff(TOUCHKEY_ON);
-
-			// signal ongoing led notification
+			/* enable touchkey vdd in sleep mode */
 			BacklightNotification_ongoing = true;
 
-			// write to i2cbus, enable backlights
+			/* write to i2cbus, enable backlights */
 			enable_touchkey_backlights();
 
 			printk(KERN_DEBUG "%s: notification led enabled\n", __FUNCTION__);
@@ -423,27 +426,17 @@ static void enable_led_notification(void){
 
 static void disable_led_notification(void){
 	printk(KERN_DEBUG "%s: notification led disabled\n", __FUNCTION__);
+	/* disable touchkey vdd in sleep mode */
 	BacklightNotification_ongoing = false;
 
-	/* set the blink state to default
-	 */
+	/* disable the blink state */
 	BLN_blink_enabled = false;
 
-	/* if touchkeys lights are not used for touchmode
-	 */
-	if (devdata->is_powering_on){
-		printk("cypress: disabling touchkey backlights\n");
+	if (blndevdata->is_powering_on){
+		/* write to i2cbus, disable backlights */
 		disable_touchkey_backlights();
-		//power off the touchkey controller
-		devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
+		touchkey_power_off();
 	}
-
-	/*
-	 * reconfigure gpio for sleep mode, this has to be done
-	 * independently from the power status
-	 */
-	devdata->pdata->touchkey_sleep_onoff(TOUCHKEY_ON);
-
 }
 
 static ssize_t backlightnotification_status_read(struct device *dev, struct device_attribute *attr, char *buf) {
@@ -539,7 +532,7 @@ static ssize_t backlightnotification_version(struct device *dev, struct device_a
 
 static DEVICE_ATTR(blink_control, S_IRUGO | S_IWUGO , blink_control_read, blink_control_write);
 static DEVICE_ATTR(enabled, S_IRUGO | S_IWUGO , backlightnotification_status_read, backlightnotification_status_write);
-static DEVICE_ATTR(notification_led, S_IRUGO | S_IWUGO, notification_led_status_read, notification_led_status_write);
+static DEVICE_ATTR(notification_led, S_IRUGO | S_IWUGO , notification_led_status_read, notification_led_status_write);
 static DEVICE_ATTR(version, S_IRUGO , backlightnotification_version, NULL);
 
 static struct attribute *bln_notification_attributes[] = {
@@ -559,8 +552,6 @@ static struct miscdevice backlightnotification_device = {
 		.name = "backlightnotification",
 };
 #endif
-
-
 
 static int __devexit i2c_touchkey_remove(struct i2c_client *client)
 {

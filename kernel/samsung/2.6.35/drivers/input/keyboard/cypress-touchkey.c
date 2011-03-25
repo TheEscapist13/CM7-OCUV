@@ -60,7 +60,7 @@ bool bln_enabled = false;
 bool BacklightNotification_ongoing = false;
 bool BLN_blink_enabled = false;
 #define BACKLIGHTNOTIFICATION_VERSION 8
-struct cypress_touchkey_devdata *blndevdata;
+struct cypress_touchkey_devdata *devdata;
 #endif
 
 
@@ -207,11 +207,12 @@ static irqreturn_t touchkey_interrupt_handler(int irq, void *touchkey_devdata)
 	if (devdata->is_powering_on) {
 		dev_err(&devdata->client->dev, "%s: ignoring spurious boot "
 					"interrupt\n", __func__);
+#ifdef CONFIG_BACKLIGHT_NOTIFICATION
 		if(!BacklightNotification_ongoing) {	
 			i2c_touchkey_write_byte(devdata, devdata->backlight_off);
 			printk("cypress: turning off backlights because we have screen off and no notifications\n");
 		}	
-	
+#endif
 		return IRQ_HANDLED;
 	}
 
@@ -225,6 +226,7 @@ static void cypress_touchkey_early_suspend(struct early_suspend *h)
 		container_of(h, struct cypress_touchkey_devdata, early_suspend);
 
 	devdata->is_powering_on = true;
+	
 
 	if (unlikely(devdata->is_dead))
 		return;
@@ -235,8 +237,8 @@ static void cypress_touchkey_early_suspend(struct early_suspend *h)
 
 	if(!BacklightNotification_ongoing)
 #endif
-	devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
-	all_keys_up(devdata);
+		devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
+		all_keys_up(devdata);
 	
 }
 
@@ -262,7 +264,9 @@ static void cypress_touchkey_early_resume(struct early_suspend *h)
 static int cypress_touchkey_probe(struct i2c_client *client,
 		const struct i2c_device_id *id)
 {
+#ifndef CONFIG_BACKLIGHT_NOTIFICATION
 	struct cypress_touchkey_devdata *devdata;
+#endif
 	struct device *dev = &client->dev;
 	struct input_dev *input_dev;
 	u8 data[3];
@@ -364,9 +368,7 @@ static int cypress_touchkey_probe(struct i2c_client *client,
 	register_early_suspend(&devdata->early_suspend);
 
 	devdata->is_powering_on = false;
-	
-	blndevdata = devdata;
-	
+
 
 	return 0;
 
@@ -386,11 +388,11 @@ err_null_keycodes:
 
 #ifdef CONFIG_BACKLIGHT_NOTIFICATION
 static void enable_touchkey_backlights(void){
-	i2c_touchkey_write_byte(blndevdata, blndevdata->backlight_on);
+	i2c_touchkey_write_byte(devdata, devdata->backlight_on);
 }
 
 static void disable_touchkey_backlights(void){
-	i2c_touchkey_write_byte(blndevdata, blndevdata->backlight_off);
+	i2c_touchkey_write_byte(devdata, devdata->backlight_off);
 }
 
 static void enable_led_notification(void){
@@ -398,13 +400,13 @@ static void enable_led_notification(void){
 		/*
 		 * is_powering_on signals whether touchkey lights are used for notifications or for touchmode
 		 */
-		if (blndevdata->is_powering_on){
+		if (devdata->is_powering_on){
 
 			//reconfigure gpio for sleep mode
-			blndevdata->pdata->touchkey_sleep_onoff(TOUCHKEY_ON);
+			devdata->pdata->touchkey_sleep_onoff(TOUCHKEY_ON);
 
 			//power on the touchkey controller
-			blndevdata->pdata->touchkey_onoff(TOUCHKEY_ON);
+			devdata->pdata->touchkey_onoff(TOUCHKEY_ON);
 
 			// signal ongoing led notification
 			BacklightNotification_ongoing = true;
@@ -429,30 +431,19 @@ static void disable_led_notification(void){
 
 	/* if touchkeys lights are not used for touchmode
 	 */
-	if (blndevdata->is_powering_on){
+	if (devdata->is_powering_on){
 		printk("cypress: disabling touchkey backlights\n");
 		disable_touchkey_backlights();
 		//power off the touchkey controller
-		blndevdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
+		devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
 	}
 
 	/*
 	 * reconfigure gpio for sleep mode, this has to be done
 	 * independently from the power status
 	 */
-	printk("cypress: turning sleep mode on\n");
-	blndevdata->pdata->touchkey_sleep_onoff(TOUCHKEY_ON);
+	devdata->pdata->touchkey_sleep_onoff(TOUCHKEY_ON);
 
-	printk("sleeping for 10ms before turning on touchkey");
-	msleep(10);
-	
-	printk("cypress: turning on touchkey\n");
-	blndevdata->pdata->touchkey_onoff(TOUCHKEY_ON);
-	
-	if(!blndevdata->is_powering_on) {
-		printk("cypress: disabling touchkey backlights\n");
-		int ret = i2c_touchkey_write_byte(blndevdata, blndevdata->backlight_off);
-	}
 }
 
 static ssize_t backlightnotification_status_read(struct device *dev, struct device_attribute *attr, char *buf) {

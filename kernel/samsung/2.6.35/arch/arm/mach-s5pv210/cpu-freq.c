@@ -68,7 +68,7 @@ static struct cpufreq_frequency_table freq_table[] = {
 extern int exp_UV_mV[8]; //Needed for uv
 unsigned int freq_uv_table[8][3] = {
 	//freq, 	stock, current
-	{1300000,	1400,	1400},
+	{1300000,	1350,	1350},
 	{1200000,	1350,	1350},
 	{1000000,	1250,	1250},
 	{800000,	1200,	1200},
@@ -92,7 +92,7 @@ const unsigned long int_volt_max = 1250000;
 // added more voltage levels for the added frequencies
 static struct s5pv210_dvs_conf dvs_conf[] = {
 	[L0] = { 
-		.arm_volt   = 1400000,
+		.arm_volt   = 1350000,
 		.int_volt   = 1100000,
 	},
 	[L1] = {

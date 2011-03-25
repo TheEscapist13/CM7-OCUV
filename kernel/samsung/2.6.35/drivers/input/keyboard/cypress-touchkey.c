@@ -414,6 +414,10 @@ static void enable_led_notification(void){
 			/* enable touchkey vdd in sleep mode */
 			BacklightNotification_ongoing = true;
 
+			blndevdata->pdata->touchkey_sleep_onoff(TOUCHKEY_ON);
+			//power on the touchkey controller
+			devdata->pdata->touchkey_onoff(TOUCHKEY_ON);
+
 			/* write to i2cbus, enable backlights */
 			enable_touchkey_backlights();
 

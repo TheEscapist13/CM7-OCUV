@@ -20,6 +20,7 @@
 #include <plat/map-base.h>
 #include <mach/regs-clock.h>
 #include "wm8994_samsung.h"
+#include "wm8994_voodoo.h"
 
 /*
  * Debug Feature

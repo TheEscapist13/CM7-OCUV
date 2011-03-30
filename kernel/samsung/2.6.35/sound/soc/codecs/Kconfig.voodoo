@@ -39,6 +39,14 @@ config SND_VOODOO_RECORD_PRESETS
   	depends on SND_VOODOO
 	default y
 
+config SND_VOODOO_MODULE
+	tristate "Build also as module (incomplete)"
+	depends on SND_VOODOO && m
+	default n
+	help
+	  requires additionnal source
+
+
 config SND_VOODOO_DEBUG
 	bool "Codec development tools (unsafe and introduce sound skipping)"
 	depends on SND_VOODOO

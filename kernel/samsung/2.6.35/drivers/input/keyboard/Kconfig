@@ -438,7 +438,11 @@ config KEYPAD_CYPRESS_TOUCH
 config KEYPAD_CYPRESS_TOUCH_HAS_LEGACY_KEYCODE
 	tristate "Cypress touch legacy keycode support"
 	depends on KEYPAD_CYPRESS_TOUCH
-	default y
+	default n
 	help
 	 Say Y here if your device uses legacy keycodes.
+
+config BACKLIGHT_NOTIFICATION
+	bool "bln"
+	default y
 endif

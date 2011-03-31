@@ -676,7 +676,7 @@ static ssize_t show_frequency_voltage_table(struct cpufreq_policy *policy,
 						char *buf) {
 	
 	return sprintf(buf,
-	"%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n",
+	"%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n%d %d %d\n",
 	freq_uv_table[0][0], freq_uv_table[0][1], freq_uv_table[0][2],
 	freq_uv_table[1][0], freq_uv_table[1][1], freq_uv_table[1][2],
 	freq_uv_table[2][0], freq_uv_table[2][1], freq_uv_table[2][2],

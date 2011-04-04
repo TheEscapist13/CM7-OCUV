@@ -58,6 +58,7 @@ static u64 freq_change_time_in_idle;
 static cpumask_t work_cpumask;
 static unsigned int suspended;
 
+
 /*
  * The minimum amount of time to spend at a frequency before we can ramp down,
  * default is 45ms.
@@ -91,19 +92,19 @@ static unsigned int sample_rate_jiffies;
  * Max freqeuncy delta when ramping up.
  */
 
-#define DEFAULT_MAX_RAMP_UP (400 * 1000)
+#define DEFAULT_MAX_RAMP_UP (200 * 1000)
 static unsigned int max_ramp_up;
 
 /*
  * CPU freq will be increased if measured load > max_cpu_load;
  */
-#define DEFAULT_MAX_CPU_LOAD 70
+#define DEFAULT_MAX_CPU_LOAD 60
 static unsigned long max_cpu_load;
 
 /*
  * CPU freq will be decreased if measured load < min_cpu_load;
  */
-#define DEFAULT_MIN_CPU_LOAD 20
+#define DEFAULT_MIN_CPU_LOAD 30
 static unsigned long min_cpu_load;
 
 
@@ -208,6 +209,7 @@ static unsigned int cpufreq_smartass_calc_freq(unsigned int cpu, struct cpufreq_
 	unsigned int new_freq;
 	u64 current_wall_time;
 	u64 current_idle_time;
+	int index;
 
 	current_idle_time = get_cpu_idle_time_us(cpu, &current_wall_time);
 
@@ -215,18 +217,32 @@ static unsigned int cpufreq_smartass_calc_freq(unsigned int cpu, struct cpufreq_
 	delta_time = (unsigned int)( current_wall_time - freq_change_time );
 
 	cpu_load = 100 * (delta_time - idle_time) / delta_time;
-	//printk(KERN_INFO "Smartass calc_freq: delta_time=%u cpu_load=%u\n",delta_time,cpu_load);
+	printk(KERN_INFO "Smartass calc_freq: delta_time=%u cpu_load=%u\n",delta_time,cpu_load);
 	if (cpu_load < min_cpu_load) {
+	//if the current frequency is below 1ghz, everything is 200mhz steps
+	  if(policy->cur < 1000000) 
+	  	return policy->cur - 200000;
+	  //above 1ghz though, everything is 100mhz steps
+	  else 
+	  	return policy->cur - 100000;
+	  /*
+          //why can't we just force it to ramp down by to the next freq level?
 	  cpu_load += 100 - max_cpu_load; // dummy load.
 	  new_freq = policy->cur * cpu_load / 100;
 	  //if (new_freq < policy->cur - max_ramp_up) new_freq = policy->cur - max_ramp_up;
-	  //printk(KERN_INFO "Smartass calc_freq: %u => %u\n",policy->cur,new_freq);
-	  return new_freq;
-	} if (cpu_load > max_cpu_load) {
+	  printk(KERN_INFO "Smartass calc_freq: %u => %u\n",policy->cur,new_freq);
+	  return new_freq;*/
+	}
+	if (cpu_load > max_cpu_load) {
+	 /* // and same here, just bump it up one level
 	  new_freq = policy->cur / max_cpu_load;
 	  if (new_freq > policy->cur + max_ramp_up)
 	  	new_freq = policy->cur + max_ramp_up;
-	  return new_freq;
+	  return new_freq; */
+	  if(policy->cur < 1000000)
+	  	return policy->cur + 200000;
+	  else
+	  	return policy->cur + 100000;
 	}
 	return policy->cur;
 }

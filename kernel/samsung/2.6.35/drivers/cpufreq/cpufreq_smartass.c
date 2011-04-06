@@ -63,7 +63,7 @@ static unsigned int suspended;
  * The minimum amount of time to spend at a frequency before we can ramp down,
  * default is 45ms.
  */
-#define DEFAULT_RAMP_DOWN_RATE_NS 90000;
+#define DEFAULT_RAMP_DOWN_RATE_NS 45000;
 static unsigned long ramp_down_rate_ns;
 
 /*
@@ -98,7 +98,7 @@ static unsigned int max_ramp_up;
 /*
  * CPU freq will be increased if measured load > max_cpu_load;
  */
-#define DEFAULT_MAX_CPU_LOAD 60
+#define DEFAULT_MAX_CPU_LOAD 70
 static unsigned long max_cpu_load;
 
 /*
@@ -209,7 +209,7 @@ static unsigned int cpufreq_smartass_calc_freq(unsigned int cpu, struct cpufreq_
 	unsigned int new_freq;
 	u64 current_wall_time;
 	u64 current_idle_time;
-	int index;
+	
 
 	current_idle_time = get_cpu_idle_time_us(cpu, &current_wall_time);
 
@@ -219,12 +219,18 @@ static unsigned int cpufreq_smartass_calc_freq(unsigned int cpu, struct cpufreq_
 	cpu_load = 100 * (delta_time - idle_time) / delta_time;
 	printk(KERN_INFO "Smartass calc_freq: delta_time=%u cpu_load=%u\n",delta_time,cpu_load);
 	if (cpu_load < min_cpu_load) {
-	//if the current frequency is below 1ghz, everything is 200mhz steps
-	  if(policy->cur < 1000000) 
-	  	return policy->cur - 200000;
-	  //above 1ghz though, everything is 100mhz steps
-	  else 
-	  	return policy->cur - 100000;
+	//if the current frequency is below 1.2ghz, everything is 200mhz steps
+	  if(policy->cur <= 1200000) {
+	  	new_freq = policy->cur - 200000;
+	  	//printk(KERN_INFO "Smartass calc_freq: policy->cur = %d returning %d", policy->cur, new_freq);
+	  	return new_freq;
+	  }	
+	  //above 1.2ghz though, everything is 100mhz steps
+	  else {
+	  	new_freq = policy->cur - 100000;
+	  	//printk(KERN_INFO "Smartass calc_freq: policy->cur = %d returning %d", policy->cur, new_freq);
+	  	return new_freq;
+	  }	
 	  /*
           //why can't we just force it to ramp down by to the next freq level?
 	  cpu_load += 100 - max_cpu_load; // dummy load.
@@ -239,10 +245,16 @@ static unsigned int cpufreq_smartass_calc_freq(unsigned int cpu, struct cpufreq_
 	  if (new_freq > policy->cur + max_ramp_up)
 	  	new_freq = policy->cur + max_ramp_up;
 	  return new_freq; */
-	  if(policy->cur < 1000000)
-	  	return policy->cur + 200000;
-	  else
-	  	return policy->cur + 100000;
+	  if(policy->cur < 1200000) {
+	  	new_freq = policy->cur + 200000;
+	  	//printk(KERN_INFO "Smartass calc_freq: policy->cur = %d returning %d", policy->cur, new_freq);
+	  	return new_freq;
+	  }
+	  else {
+	  	new_freq = policy->cur + 100000;
+	  	//printk(KERN_INFO "Smartass calc_freq: policy->cur = %d returning %d", policy->cur, new_freq);
+	  	return new_freq;
+	  }
 	}
 	return policy->cur;
 }
@@ -296,6 +308,7 @@ static void cpufreq_smartass_freq_change_time_work(struct work_struct *work)
 		if (new_freq < policy->min)
 			new_freq = policy->min;
 		
+		printk(KERN_INFO "Smartass: freq_time_changer: changing freq to %d, was %d", new_freq, policy->cur);
 		__cpufreq_driver_target(policy, new_freq,
 					CPUFREQ_RELATION_L);
 
@@ -303,6 +316,8 @@ static void cpufreq_smartass_freq_change_time_work(struct work_struct *work)
 							&freq_change_time);
 
 		cpumask_clear_cpu(cpu, &work_cpumask);
+		
+		printk(KERN_INFO "Smartass: freq_time_changer: freq changed, is now %d", policy->cur);
 	}
 
 

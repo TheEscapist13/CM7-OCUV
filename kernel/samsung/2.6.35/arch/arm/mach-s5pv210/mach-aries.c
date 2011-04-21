@@ -19,7 +19,6 @@
 #include <linux/i2c-gpio.h>
 #include <linux/regulator/consumer.h>
 #include <linux/mfd/max8998.h>
-#include <linux/i2c/ak8973.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/usb/ch9.h>
@@ -42,10 +41,12 @@
 #include <mach/map.h>
 #include <mach/regs-clock.h>
 #include <mach/gpio.h>
+#include <mach/gpio-settings.h>
 #include <mach/gpio-aries.h>
 #include <mach/adc.h>
 #include <mach/param.h>
 #include <mach/system.h>
+#include <mach/sec_switch.h>
 
 #include <linux/usb/gadget.h>
 #include <linux/fsa9480.h>
@@ -67,9 +68,9 @@
 #endif
 #include <mach/cpu-freq-v210.h>
 
+#include <media/ce147_platform.h>
 #include <media/s5ka3dfx_platform.h>
 #include <media/s5k4ecgx.h>
-#include <media/ce147_platform.h>
 
 #include <plat/regs-serial.h>
 #include <plat/s5pv210.h>
@@ -87,14 +88,16 @@
 #include <plat/regs-otg.h>
 #include <linux/gp2a.h>
 #include <linux/yas529.h>
-#include <linux/kr3dm.h>
-#include <linux/input/k3g.h>
 #include <../../../drivers/video/samsung/s3cfb.h>
 #include <linux/sec_jack.h>
 #include <linux/input/mxt224.h>
 #include <linux/max17040_battery.h>
 #include <linux/mfd/max8998.h>
 #include <linux/switch.h>
+
+#ifdef CONFIG_KERNEL_DEBUG_SEC
+#include <linux/kernel_sec_common.h>
+#endif
 
 #include "aries.h"
 
@@ -127,8 +130,6 @@ EXPORT_SYMBOL(sec_get_param_value);
 
 #define WLAN_SKB_BUF_NUM	16
 
-/* disable cypress and use virtual keys */ 
-//#define ENABLE_VIRTUAL_KEYS 1
 
 static struct sk_buff *wlan_static_skb[WLAN_SKB_BUF_NUM];
 
@@ -141,7 +142,6 @@ static int aries_notifier_call(struct notifier_block *this,
 					unsigned long code, void *_cmd)
 {
 	int mode = REBOOT_MODE_NONE;
-	unsigned int temp;
 
 	if ((code == SYS_RESTART) && _cmd) {
 		if (!strcmp((char *)_cmd, "recovery"))
@@ -306,59 +306,10 @@ static struct s3cfb_lcd s6e63m0 = {
 	},
 };
 
-static struct s3cfb_lcd nt35580 = {
-	.width = 480,
-	.height = 800,
-	.p_width = 52,
-	.p_height = 86,
-	.bpp = 24,
-	.freq = 72,
-	.timing = {
-		.h_fp = 10,
-		.h_bp = 20,
-		.h_sw = 10,
-		.v_fp = 6,
-		.v_fpe = 1,
-		.v_bp = 8,
-		.v_bpe = 1,
-		.v_sw = 2,
-	},
-	.polarity = {
-		.rise_vclk = 1,
-		.inv_hsync = 1,
-		.inv_vsync = 1,
-		.inv_vden = 1,
-	},
-};
 
-static struct s3cfb_lcd r61408 = {
-	.width = 480,
-	.height = 800,
-	.p_width = 52,
-	.p_height = 86,
-	.bpp = 24,
-	.freq = 72,
-	.timing = {
-		.h_fp = 100,
-		.h_bp = 2,
-		.h_sw = 2,
-		.v_fp = 8,
-		.v_fpe = 1,
-		.v_bp = 10,
-		.v_bpe = 1,
-		.v_sw = 2,
-	},
-	.polarity = {
-		.rise_vclk = 1,
-		.inv_hsync = 1,
-		.inv_vsync = 1,
-		.inv_vden = 0,
-	},
-};
-
-#define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC0 (6144 * SZ_1K)
+#define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC0 (12288 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC1 (9900 * SZ_1K)
-#define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC2 (6144 * SZ_1K)
+#define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC2 (12288 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_MFC0 (36864 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_MFC1 (36864 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMD (S5PV210_LCD_WIDTH * \
@@ -366,9 +317,10 @@ static struct s3cfb_lcd r61408 = {
 					     CONFIG_FB_S3C_NR_BUFFERS)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_JPEG (8192 * SZ_1K)
 
-#define  S5PV210_ANDROID_PMEM_MEMSIZE_PMEM (4096 * SZ_1K)
-#define  S5PV210_ANDROID_PMEM_MEMSIZE_PMEM_GPU1 (8192 * SZ_1K)
+#define  S5PV210_ANDROID_PMEM_MEMSIZE_PMEM (5550 * SZ_1K)
+#define  S5PV210_ANDROID_PMEM_MEMSIZE_PMEM_GPU1 (3000 * SZ_1K)
 #define  S5PV210_ANDROID_PMEM_MEMSIZE_PMEM_ADSP (1500 * SZ_1K)
+#define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_TEXTSTREAM (3000 * SZ_1K)
 
 static struct s5p_media_device aries_media_devs[] = {
 	[0] = {
@@ -442,6 +394,13 @@ static struct s5p_media_device aries_media_devs[] = {
                 .paddr = 0,
 		.bank = 0,
         },
+        [10] = {
+        	.id = S5P_MDEV_TEXSTREAM,
+		.name = "s3c_bc",
+		.bank = 1,
+		.memsize = S5PV210_VIDEO_SAMSUNG_MEMSIZE_TEXTSTREAM,
+		.paddr = 0,
+	},  
 #endif
 };
 
@@ -576,7 +535,7 @@ static struct regulator_init_data aries_ldo7_data = {
 		.min_uV		= 1800000,
 		.max_uV		= 1800000,
 		.apply_uV	= 1,
-		.always_on	= 1,
+		.always_on	= 0,
 		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
 		.state_mem	= {
 			.disabled = 1,
@@ -614,8 +573,8 @@ static struct regulator_init_data aries_ldo9_data = {
 static struct regulator_init_data aries_ldo11_data = {
 	.constraints	= {
 		.name		= "CAM_AF_3.0V",
-		.min_uV		= 2800000,
-		.max_uV		= 2800000,
+		.min_uV		= 3000000,
+		.max_uV		= 3000000,
 		.apply_uV	= 1,
 		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
 		.state_mem	= {
@@ -707,7 +666,7 @@ static struct regulator_init_data aries_ldo17_data = {
 		.min_uV		= 3000000,
 		.max_uV		= 3000000,
 		.apply_uV	= 1,
-		.always_on	= 1,
+		.always_on	= 0,
 		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
 		.state_mem	= {
 			.disabled = 1,
@@ -797,176 +756,6 @@ static struct max8998_regulator_data aries_regulators[] = {
 	{ MAX8998_BUCK3, &aries_buck3_data },
 	{ MAX8998_BUCK4, &aries_buck4_data },
 };
-
-static struct max8998_adc_table_data temper_table_oled[] =  {
-	/* ADC, Temperature (C/10) */
-	{  222,		700	},
-	{  230,		690	},
-	{  238,		680	},
-	{  245,		670	},
-	{  253,		660	},
-	{  261,		650	},
-	{  274,		640	},
-	{  287,		630	},
-	{  300,		620	},
-	{  314,		610	},
-	{  327,		600	},
-	{  339,		590	},
-	{  350,		580	},
-	{  362,		570	},
-	{  374,		560	},
-	{  386,		550	},
-	{  401,		540	},
-	{  415,		530	},
-	{  430,		520	},
-	{  444,		510	},
-	{  459,		500	},
-	{  477,		490	},
-	{  495,		480	},
-	{  513,		470	},
-	{  526,		460	},
-	{  539,		450	},
-	{  559,		440	},
-	{  580,		430	},
-	{  600,		420	},
-	{  618,		410	},
-	{  642,		400	},
-	{  649,		390	},
-	{  674,		380	},
-	{  695,		370	},
-	{  717,		360	},
-	{  739,		350	},
-	{  760,		340	},
-	{  782,		330	},
-	{  803,		320	},
-	{  825,		310	},
-	{  847,		300	},
-	{  870,		290	},
-	{  894,		280	},
-	{  918,		270	},
-	{  942,		260	},
-	{  966,		250	},
-	{  990,		240	},
-	{ 1014,		230	},
-	{ 1038,		220	},
-	{ 1062,		210	},
-	{ 1086,		200	},
-	{ 1110,		190	},
-	{ 1134,		180	},
-	{ 1158,		170	},
-	{ 1182,		160	},
-	{ 1206,		150	},
-	{ 1228,		140	},
-	{ 1251,		130	},
-	{ 1274,		120	},
-	{ 1297,		110	},
-	{ 1320,		100	},
-	{ 1341,		90	},
-	{ 1362,		80	},
-	{ 1384,		70	},
-	{ 1405,		60	},
-	{ 1427,		50	},
-	{ 1450,		40	},
-	{ 1474,		30	},
-	{ 1498,		20	},
-	{ 1514,		10	},
-	{ 1533,		0	},
-	{ 1544,		(-10)	},
-	{ 1567,		(-20)	},
-	{ 1585,		(-30)	},
-	{ 1604,		(-40)	},
-	{ 1623,		(-50)	},
-	{ 1641,		(-60)	},
-	{ 1659,		(-70)	},
-	{ 1678,		(-80)	},
-	{ 1697,		(-90)	},
-	{ 1715,		(-100)	},
-};
-static struct max8998_adc_table_data temper_table_tft[] =  {
-	/* ADC, Temperature (C/10) */
-	{ 242,		700	},
-	{ 253,		690	},
-	{ 264,		680	},
-	{ 275,		670	},
-	{ 286,		660	},
-	{ 297,		650	},
-	{ 310,		640	},
-	{ 323,		630	},
-	{ 336,		620	},
-	{ 349,		610	},
-	{ 362,		600	},
-	{ 375,		590	},
-	{ 388,		580	},
-	{ 401,		570	},
-	{ 414,		560	},
-	{ 430,		550	},
-	{ 444,		540	},
-	{ 458,		530	},
-	{ 472,		520	},
-	{ 486,		510	},
-	{ 500,		500	},
-	{ 515,		490	},
-	{ 530,		480	},
-	{ 545,		470	},
-	{ 560,		460	},
-	{ 575,		450	},
-	{ 590,		440	},
-	{ 605,		430	},
-	{ 625,		420	},
-	{ 645,		410	},
-	{ 665,		400	},
-	{ 683,		390	},
-	{ 702,		380	},
-	{ 735,		370	},
-	{ 768,		360	},
-	{ 768,		350	},
-	{ 790,		340	},
-	{ 812,		330	},
-	{ 834,		320	},
-	{ 856,		310	},
-	{ 881,		300	},
-	{ 905,		290	},
-	{ 929,		280	},
-	{ 955,		270	},
-	{ 979,		260	},
-	{ 1002,		250	},
-	{ 1027,		240	},
-	{ 1053,		230	},
-	{ 1078,		220	},
-	{ 1105,		210	},
-	{ 1130,		200	},
-	{ 1151,		190	},
-	{ 1174,		180	},
-	{ 1195,		170	},
-	{ 1219,		160	},
-	{ 1237,		150	},
-	{ 1261,		140	},
-	{ 1285,		130	},
-	{ 1309,		120	},
-	{ 1331,		110	},
-	{ 1359,		100	},
-	{ 1381,		90	},
-	{ 1404,		80	},
-	{ 1426,		70	},
-	{ 1438,		60	},
-	{ 1470,		50	},
-	{ 1488,		40	},
-	{ 1506,		30	},
-	{ 1524,		20	},
-	{ 1532,		10	},
-	{ 1560,		0	},
-	{ 1586,		(-10)	},
-	{ 1604,		(-20)	},
-	{ 1614,		(-30)	},
-	{ 1622,		(-40)	},
-	{ 1630,		(-50)	},
-	{ 1648,		(-60)	},
-	{ 1666,		(-70)	},
-	{ 1684,		(-80)	},
-	{ 1702,		(-90)	},
-	{ 1720,		(-100)	},
-};
-struct max8998_charger_callbacks *callbacks;
 static enum cable_type_t set_cable_status;
 
 static void max8998_charger_register_callbacks(
@@ -995,6 +784,100 @@ static void set_adc_table(void)
 			ARRAY_SIZE(temper_table_tft);
 	}
 }
+static struct max8998_adc_table_data temper_table[] =  {
+  {  264,  650 },
+  {  275,  640 },
+  {  286,  630 },
+  {  293,  620 },
+  {  299,  610 },
+  {  306,  600 },
+  {  324,  590 },
+  {  341,  580 },
+  {  354,  570 },
+  {  368,  560 },
+  {  381,  550 },
+  {  396,  540 },
+  {  411,  530 },
+  {  427,  520 },
+  {  442,  510 },
+  {  457,  500 },
+  {  472,  490 },
+  {  487,  480 },
+  {  503,  470 },
+  {  518,  460 },
+  {  533,  450 },
+  {  554,  440 },
+  {  574,  430 },
+  {  595,  420 },
+  {  615,  410 },
+  {  636,  400 },
+  {  656,  390 },
+  {  677,  380 },
+  {  697,  370 },
+  {  718,  360 },
+  {  738,  350 },
+  {  761,  340 },
+  {  784,  330 },
+  {  806,  320 },
+  {  829,  310 },
+  {  852,  300 },
+  {  875,  290 },
+  {  898,  280 },
+  {  920,  270 },
+  {  943,  260 },
+  {  966,  250 },
+  {  990,  240 },
+  { 1013,  230 },
+  { 1037,  220 },
+  { 1060,  210 },
+  { 1084,  200 },
+  { 1108,  190 },
+  { 1131,  180 },
+  { 1155,  170 },
+  { 1178,  160 },
+  { 1202,  150 },
+  { 1226,  140 },
+  { 1251,  130 },
+  { 1275,  120 },
+  { 1299,  110 },
+  { 1324,  100 },
+  { 1348,   90 },
+  { 1372,   80 },
+  { 1396,   70 },
+  { 1421,   60 },
+  { 1445,   50 },
+  { 1468,   40 },
+  { 1491,   30 },
+  { 1513,   20 },
+  { 1536,   10 },
+  { 1559,    0 },
+  { 1577,  -10 },
+  { 1596,  -20 },
+  { 1614,  -30 },
+  { 1619,  -40 },
+  { 1632,  -50 },
+  { 1658,  -60 },
+  { 1667,  -70 }, 
+};
+struct max8998_charger_callbacks *charger_callbacks;
+static enum cable_type_t set_cable_status;
+
+static void max8998_charger_register_callbacks(
+		struct max8998_charger_callbacks *ptr)
+{
+	charger_callbacks = ptr;
+	/* if there was a cable status change before the charger was
+	ready, send this now */
+	if ((set_cable_status != 0) && charger_callbacks && charger_callbacks->set_cable)
+		charger_callbacks->set_cable(charger_callbacks, set_cable_status);
+}
+
+static struct max8998_charger_data aries_charger = {
+	.register_callbacks	= &max8998_charger_register_callbacks,
+	.adc_table		= temper_table,
+	.adc_array_size		= ARRAY_SIZE(temper_table),
+};
+
 
 static struct max8998_platform_data max8998_pdata = {
 	.num_regulators = ARRAY_SIZE(aries_regulators),
@@ -1013,188 +896,108 @@ struct platform_device sec_device_dpram = {
 	.id	= -1,
 };
 
-static unsigned int lcd_type;
-module_param_named(lcd_type, lcd_type, uint, 0444);
-MODULE_PARM_DESC(lcd_type, "LCD type: default= sony, 1= hydis, 2= hitachi");
-
-static void panel_cfg_gpio(struct platform_device *pdev)
+static void tl2796_cfg_gpio(struct platform_device *pdev)
 {
 	int i;
 
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i < 8; i) 
 		s3c_gpio_cfgpin(S5PV210_GPF0(i), S3C_GPIO_SFN(2));
-		s3c_gpio_setpull(S5PV210_GPF0(i), S3C_GPIO_PULL_NONE);
-	}
 
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i < 8; i) 
 		s3c_gpio_cfgpin(S5PV210_GPF1(i), S3C_GPIO_SFN(2));
-		s3c_gpio_setpull(S5PV210_GPF1(i), S3C_GPIO_PULL_NONE);
-	}
-
-	for (i = 0; i < 8; i++) {
+		
+	for (i = 0; i < 8; i) 
 		s3c_gpio_cfgpin(S5PV210_GPF2(i), S3C_GPIO_SFN(2));
-		s3c_gpio_setpull(S5PV210_GPF2(i), S3C_GPIO_PULL_NONE);
-	}
-
-	for (i = 0; i < 4; i++) {
+		
+	for (i = 0; i < 4; i) 
 		s3c_gpio_cfgpin(S5PV210_GPF3(i), S3C_GPIO_SFN(2));
-		s3c_gpio_setpull(S5PV210_GPF3(i), S3C_GPIO_PULL_NONE);
-	}
-
+		
 	/* mDNIe SEL: why we shall write 0x2 ? */
 #ifdef CONFIG_FB_S3C_MDNIE
 	writel(0x1, S5P_MDNIE_SEL);
 #else
 	writel(0x2, S5P_MDNIE_SEL);
 #endif
-
-	/* DISPLAY_CS */
-	s3c_gpio_cfgpin(S5PV210_MP01(1), S3C_GPIO_SFN(1));
-	/* DISPLAY_CLK */
-	s3c_gpio_cfgpin(S5PV210_MP04(1), S3C_GPIO_SFN(1));
-	/* DISPLAY_SO */
-	s3c_gpio_cfgpin(S5PV210_MP04(2), S3C_GPIO_SFN(1));
-	/* DISPLAY_SI */
-	s3c_gpio_cfgpin(S5PV210_MP04(3), S3C_GPIO_SFN(1));
-
-	/* DISPLAY_CS */
-	s3c_gpio_setpull(S5PV210_MP01(1), S3C_GPIO_PULL_NONE);
-	/* DISPLAY_CLK */
-	s3c_gpio_setpull(S5PV210_MP04(1), S3C_GPIO_PULL_NONE);
-	/* DISPLAY_SO */
-	s3c_gpio_setpull(S5PV210_MP04(2), S3C_GPIO_PULL_NONE);
-	/* DISPLAY_SI */
-	s3c_gpio_setpull(S5PV210_MP04(3), S3C_GPIO_PULL_NONE);
-
-	/* OLED_ID */
-	if (system_rev >= 0x30) {
-		s3c_gpio_cfgpin(GPIO_OLED_ID, S3C_GPIO_INPUT);
-		s3c_gpio_setpull(GPIO_OLED_ID, S3C_GPIO_PULL_DOWN);
-	}
+	s3c_gpio_setpull(GPIO_OLED_DET, S3C_GPIO_PULL_NONE);
+ 	s3c_gpio_setpull(GPIO_OLED_ID, S3C_GPIO_PULL_NONE);
+ 	s3c_gpio_setpull(GPIO_DIC_ID, S3C_GPIO_PULL_NONE);
 }
 
 void lcd_cfg_gpio_early_suspend(void)
 {
 	int i;
 
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i < 8; i) {
 		s3c_gpio_cfgpin(S5PV210_GPF0(i), S3C_GPIO_OUTPUT);
-		s3c_gpio_setpull(S5PV210_GPF0(i), S3C_GPIO_PULL_NONE);
 		gpio_set_value(S5PV210_GPF0(i), 0);
 	}
 
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i < 8; i) {
 		s3c_gpio_cfgpin(S5PV210_GPF1(i), S3C_GPIO_OUTPUT);
-		s3c_gpio_setpull(S5PV210_GPF1(i), S3C_GPIO_PULL_NONE);
 		gpio_set_value(S5PV210_GPF1(i), 0);
 	}
 
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i < 8; i) {
 		s3c_gpio_cfgpin(S5PV210_GPF2(i), S3C_GPIO_OUTPUT);
-		s3c_gpio_setpull(S5PV210_GPF2(i), S3C_GPIO_PULL_NONE);
 		gpio_set_value(S5PV210_GPF2(i), 0);
 	}
 
-	for (i = 0; i < 4; i++) {
+	for (i = 0; i < 4; i) {
 		s3c_gpio_cfgpin(S5PV210_GPF3(i), S3C_GPIO_OUTPUT);
-		s3c_gpio_setpull(S5PV210_GPF3(i), S3C_GPIO_PULL_NONE);
 		gpio_set_value(S5PV210_GPF3(i), 0);
 	}
-	/* drive strength to min */
-	writel(0x00000000, S5P_VA_GPIO + 0x12c); /* GPF0DRV */
-	writel(0x00000000, S5P_VA_GPIO + 0x14c); /* GPF1DRV */
-	writel(0x00000000, S5P_VA_GPIO + 0x16c); /* GPF2DRV */
-	writel(0x00000000, S5P_VA_GPIO + 0x18c); /* GPF3DRV */
 
-	/* OLED_DET */
-	s3c_gpio_cfgpin(GPIO_OLED_DET, S3C_GPIO_OUTPUT);
-	s3c_gpio_setpull(GPIO_OLED_DET, S3C_GPIO_PULL_NONE);
-	gpio_set_value(GPIO_OLED_DET, 0);
-
-	/* LCD_RST */
-	s3c_gpio_cfgpin(GPIO_MLCD_RST, S3C_GPIO_OUTPUT);
-	s3c_gpio_setpull(GPIO_MLCD_RST, S3C_GPIO_PULL_NONE);
 	gpio_set_value(GPIO_MLCD_RST, 0);
 
-	/* DISPLAY_CS */
-	s3c_gpio_cfgpin(GPIO_DISPLAY_CS, S3C_GPIO_OUTPUT);
-	s3c_gpio_setpull(GPIO_DISPLAY_CS, S3C_GPIO_PULL_NONE);
+
 	gpio_set_value(GPIO_DISPLAY_CS, 0);
 
-	/* DISPLAY_CLK */
-	s3c_gpio_cfgpin(GPIO_DISPLAY_CLK, S3C_GPIO_OUTPUT);
-	s3c_gpio_setpull(GPIO_DISPLAY_CLK, S3C_GPIO_PULL_NONE);
+
 	gpio_set_value(GPIO_DISPLAY_CLK, 0);
 
-	/* DISPLAY_SO */
-	/*
-	s3c_gpio_cfgpin(S5PV210_MP04(2), S3C_GPIO_INPUT);
-	s3c_gpio_setpull(S5PV210_MP04(2), S3C_GPIO_PULL_DOWN);
-	*/
 
-	/* DISPLAY_SI */
-	s3c_gpio_cfgpin(GPIO_DISPLAY_SI, S3C_GPIO_OUTPUT);
-	s3c_gpio_setpull(GPIO_DISPLAY_SI, S3C_GPIO_PULL_NONE);
 	gpio_set_value(GPIO_DISPLAY_SI, 0);
 
-	/* OLED_ID */
-	if (system_rev < 0x30) {
-		s3c_gpio_cfgpin(GPIO_OLED_ID, S3C_GPIO_INPUT);
-		s3c_gpio_setpull(GPIO_OLED_ID, S3C_GPIO_PULL_DOWN);
-		/* gpio_set_value(GPIO_OLED_ID, 0); */
-	}
-
-	/* DIC_ID */
-	s3c_gpio_cfgpin(GPIO_DIC_ID, S3C_GPIO_INPUT);
+	s3c_gpio_setpull(GPIO_OLED_DET, S3C_GPIO_PULL_DOWN);	
+	s3c_gpio_setpull(GPIO_OLED_ID, S3C_GPIO_PULL_DOWN);
 	s3c_gpio_setpull(GPIO_DIC_ID, S3C_GPIO_PULL_DOWN);
-	/* gpio_set_value(GPIO_DIC_ID, 0); */
+
 }
 EXPORT_SYMBOL(lcd_cfg_gpio_early_suspend);
 
 void lcd_cfg_gpio_late_resume(void)
 {
-	/* OLED_DET */
-	s3c_gpio_cfgpin(GPIO_OLED_DET, S3C_GPIO_INPUT);
-	s3c_gpio_setpull(GPIO_OLED_DET, S3C_GPIO_PULL_NONE);
-	/* OLED_ID */
-	if (system_rev < 0x30) {
-		s3c_gpio_cfgpin(GPIO_OLED_ID, S3C_GPIO_OUTPUT);
-		s3c_gpio_setpull(GPIO_OLED_ID, S3C_GPIO_PULL_NONE);
-		/* gpio_set_value(GPIO_OLED_ID, 0); */
-	}
-	/* DIC_ID */
-	s3c_gpio_cfgpin(GPIO_DIC_ID, S3C_GPIO_OUTPUT);
-	s3c_gpio_setpull(GPIO_DIC_ID, S3C_GPIO_PULL_NONE);
-	/* gpio_set_value(GPIO_DIC_ID, 0); */
+
+
 }
 EXPORT_SYMBOL(lcd_cfg_gpio_late_resume);
 
-static int panel_reset_lcd(struct platform_device *pdev)
+static int tl2796_reset_lcd(struct platform_device *pdev)
 {
 	int err;
 
-	err = gpio_request(S5PV210_MP05(5), "MLCD_RST");
+	err = gpio_request(GPIO_MLCD_RST, "MLCD_RST");
 	if (err) {
 		printk(KERN_ERR "failed to request MP0(5) for "
 				"lcd reset control\n");
 		return err;
 	}
 
-	gpio_direction_output(S5PV210_MP05(5), 1);
+	gpio_direction_output(GPIO_MLCD_RST, 1);
 	msleep(10);
 
-	gpio_set_value(S5PV210_MP05(5), 0);
+	gpio_set_value(GPIO_MLCD_RST, 0);
 	msleep(10);
 
-	gpio_set_value(S5PV210_MP05(5), 1);
+	gpio_set_value(GPIO_MLCD_RST, 1);
 	msleep(10);
 
-	gpio_free(S5PV210_MP05(5));
+	gpio_free(GPIO_MLCD_RST);
 
 	return 0;
 }
 
-static int panel_backlight_on(struct platform_device *pdev)
+static int tl2796_backlight_on(struct platform_device *pdev)
 {
 	return 0;
 }
@@ -1207,36 +1010,12 @@ static struct s3c_platform_fb tl2796_data __initdata = {
 	.swap		= FB_SWAP_HWORD | FB_SWAP_WORD,
 
 	.lcd = &s6e63m0,
-	.cfg_gpio	= panel_cfg_gpio,
-	.backlight_on	= panel_backlight_on,
-	.reset_lcd	= panel_reset_lcd,
+	.cfg_gpio	= tl2796_cfg_gpio,
+	.backlight_on  = tl2796_backlight_on,
+	.reset_lcd  = tl2796_reset_lcd,
 };
 
-static struct s3c_platform_fb nt35580_data __initdata = {
-	.hw_ver		= 0x62,
-	.clk_name	= "sclk_fimd",
-	.nr_wins	= 5,
-	.default_win	= CONFIG_FB_S3C_DEFAULT_WINDOW,
-	.swap		= FB_SWAP_HWORD | FB_SWAP_WORD,
 
-	.lcd			= &nt35580,
-	.cfg_gpio	= panel_cfg_gpio,
-	.backlight_on	= panel_backlight_on,
-	.reset_lcd	= panel_reset_lcd,
-};
-
-static struct s3c_platform_fb r61408_data __initdata = {
-	.hw_ver		= 0x62,
-	.clk_name	= "sclk_fimd",
-	.nr_wins	= 5,
-	.default_win	= CONFIG_FB_S3C_DEFAULT_WINDOW,
-	.swap		= FB_SWAP_HWORD | FB_SWAP_WORD,
-
-	.lcd			= &r61408,
-	.cfg_gpio	= panel_cfg_gpio,
-	.backlight_on	= panel_backlight_on,
-	.reset_lcd	= panel_reset_lcd,
-};
 
 #define LCD_BUS_NUM     3
 #define DISPLAY_CS      S5PV210_MP01(1)
@@ -1255,43 +1034,6 @@ static struct spi_board_info spi_board_info[] __initdata = {
 		.controller_data = (void *)DISPLAY_CS,
 	},
 };
-
-static struct spi_board_info spi_board_info_sony[] __initdata = {
-	{
-		.modalias	= "nt35580",
-		.platform_data	= &aries_sony_panel_data,
-		.max_speed_hz	= 1200000,
-		.bus_num	= LCD_BUS_NUM,
-		.chip_select	= 0,
-		.mode		= SPI_MODE_3,
-		.controller_data = (void *)DISPLAY_CS,
-	},
-};
-
-static struct spi_board_info spi_board_info_hydis[] __initdata = {
-	{
-		.modalias	= "nt35580",
-		.platform_data	= &aries_hydis_panel_data,
-		.max_speed_hz	= 1200000,
-		.bus_num	= LCD_BUS_NUM,
-		.chip_select	= 0,
-		.mode		= SPI_MODE_3,
-		.controller_data = (void *)DISPLAY_CS,
-	},
-};
-
-static struct spi_board_info spi_board_info_hitachi[] __initdata = {
-	{
-		.modalias	= "nt35580",
-		.platform_data	= &aries_hitachi_panel_data,
-		.max_speed_hz	= 1200000,
-		.bus_num	= LCD_BUS_NUM,
-		.chip_select	= 0,
-		.mode		= SPI_MODE_3,
-		.controller_data = (void *)DISPLAY_CS,
-	},
-};
-
 
 static struct spi_gpio_platform_data tl2796_spi_gpio_data = {
 	.sck	= DISPLAY_CLK,
@@ -1463,7 +1205,7 @@ static void touch_keypad_onoff(int onoff)
 	if (onoff == TOUCHKEY_OFF)
 		msleep(30);
 	else
-		msleep(50);
+		msleep(25);
 }
 
 static void touch_keypad_gpio_sleep(int onoff){
@@ -1855,8 +1597,10 @@ static int s5ka3dfx_power_off(void)
 	// Turn CAM_ISP_SYS_2.8V off
 	gpio_direction_output(GPIO_GPB7, 1);
 	gpio_set_value(GPIO_GPB7, 0);
-
+	
 	gpio_free(GPIO_GPB7);
+	gpio_free(GPIO_CAM_VGA_nRST);
+	gpio_free(GPIO_CAM_VGA_nSTBY);
 	return err;
 }
 
@@ -2260,11 +2004,11 @@ static struct s3c_platform_jpeg jpeg_plat __initdata = {
 };
 #endif
 
-/* I2C0 */
+/* I2C0 
 static struct i2c_board_info i2c_devs0[] __initdata = {
 
 };
-
+*/
 static struct i2c_board_info i2c_devs4[] __initdata = {
 	{
 		I2C_BOARD_INFO("wm8994", (0x34>>1)),
@@ -2272,9 +2016,10 @@ static struct i2c_board_info i2c_devs4[] __initdata = {
 	},
 };
 
-/* I2C1 */
+/* I2C1 
 static struct i2c_board_info i2c_devs1[] __initdata = {
 };
+*/
 
 static void mxt224_power_on(void)
 {
@@ -2353,101 +2098,15 @@ static struct i2c_board_info i2c_devs2[] __initdata = {
 
 static void mxt224_init(void)
 {
-#if defined (ENABLE_VIRTUAL_KEYS)		
-	mxt224_data.max_y = 950;
-	t9_config[8] = 45;
-	t9_config[9] = 3;
-	t9_config[23] = 0;
-	t9_config[24] = 0;
-	t9_config[27] = 0;
-	t9_config[28] = 0;
-	t9_config[29] = 0;
-	t9_config[30] = 0;
-#else
+
 	return;
-#endif
 }
-
-#if defined (CONFIG_SAMSUNG_GALAXYS) || defined (CONFIG_SAMSUNG_GALAXYSB)
-static ssize_t aries_virtual_keys_show(struct kobject *kobj,
-					struct kobj_attribute *attr, char *buf)
-{
-	return sprintf(buf,
-		__stringify(EV_KEY) ":" __stringify(KEY_BACK) ":425:930:75:75" /*:x:y:w:h*/
-		":" __stringify(EV_KEY) ":"
-					__stringify(KEY_MENU) ":60:930:75:75"
-		":" __stringify(EV_KEY) ":"
-					__stringify(KEY_SEARCH) ":0:0:0:0"
-		":" __stringify(EV_KEY) ":"
-					__stringify(KEY_HOME) ":0:0:0:0"
-		"\n");
-}
-#elif defined (CONFIG_SAMSUNG_CAPTIVATE)
-static ssize_t aries_virtual_keys_show(struct kobject *kobj,
-					struct kobj_attribute *attr, char *buf)
-{
-	return sprintf(buf,
-		__stringify(EV_KEY) ":" __stringify(KEY_MENU) ":71:839:73:62"
-		":" __stringify(EV_KEY) ":"
-					__stringify(KEY_HOME) ":183:839:73:62"
-		":" __stringify(EV_KEY) ":"
-					__stringify(KEY_BACK) ":294:839:73:62"
-		":" __stringify(EV_KEY) ":"
-					__stringify(KEY_SEARCH) ":406:839:73:62"
-		"\n");
-}
-#else
-static ssize_t aries_virtual_keys_show(struct kobject *kobj,
-					struct kobj_attribute *attr, char *buf)
-{
-	return sprintf(buf,
-		__stringify(EV_KEY) ":" __stringify(KEY_BACK) ":71:839:73:62"
-		":" __stringify(EV_KEY) ":"
-					__stringify(KEY_MENU) ":183:839:73:62"
-		":" __stringify(EV_KEY) ":"
-					__stringify(KEY_SEARCH) ":294:839:73:62"
-		":" __stringify(EV_KEY) ":"
-					__stringify(KEY_HOME) ":406:839:73:62"
-		"\n");
-}
-#endif
-
-static struct kobj_attribute aries_virtual_keys_attr = {
-	.attr = {
-		.name = "virtualkeys.mxt224_ts_input",
-		.mode = S_IRUGO,
-	},
-	.show = &aries_virtual_keys_show,
-};
-
-static struct attribute *aries_properties_attrs[] = {
-	&aries_virtual_keys_attr.attr,
-	NULL,
-};
-
-static struct attribute_group aries_properties_attr_group = {
-	.attrs = aries_properties_attrs,
-};
-
-static void aries_virtual_keys_init(void)
-{
-	struct kobject *properties_kobj;
-	int ret;
-
-	properties_kobj = kobject_create_and_add("board_properties", NULL);
-	if (properties_kobj)
-		ret = sysfs_create_group(properties_kobj,
-						&aries_properties_attr_group);
-	if (!properties_kobj || ret)
-		pr_err("failed to create board_properties\n");
-}
-
 /* I2C2 */
 static struct i2c_board_info i2c_devs10[] __initdata = {
 	{
 		I2C_BOARD_INFO(CYPRESS_TOUCHKEY_DEV_NAME, 0x20),
 		.platform_data  = &touchkey_data,
-		.irq = (IRQ_EINT_GROUP22_BASE + 1),
+		.irq = (IRQ_EINT_GROUP22_BASE  1),
 	},
 };
 
@@ -2475,15 +2134,15 @@ static void fsa9480_usb_cb(bool attached)
 	}
 
 	set_cable_status = attached ? CABLE_TYPE_USB : CABLE_TYPE_NONE;
-	if (callbacks && callbacks->set_cable)
-		callbacks->set_cable(callbacks, set_cable_status);
+	if (charger_callbacks && charger_callbacks->set_cable)
+ 	charger_callbacks->set_cable(charger_callbacks, set_cable_status);
 }
 
 static void fsa9480_charger_cb(bool attached)
 {
 	set_cable_status = attached ? CABLE_TYPE_AC : CABLE_TYPE_NONE;
-	if (callbacks && callbacks->set_cable)
-		callbacks->set_cable(callbacks, set_cable_status);
+	if (charger_callbacks && charger_callbacks->set_cable)
+	charger_callbacks->set_cable(charger_callbacks, set_cable_status);
 }
 
 static struct switch_dev switch_dock = {
@@ -2507,8 +2166,8 @@ static void fsa9480_deskdock_cb(bool attached)
 	}
 
 	set_cable_status = attached ? CABLE_TYPE_USB : CABLE_TYPE_NONE;
-	if (callbacks && callbacks->set_cable)
-		callbacks->set_cable(callbacks, set_cable_status);
+	if (charger_callbacks && charger_callbacks->set_cable)
+	charger_callbacks->set_cable(charger_callbacks, set_cable_status);
 }
 
 static void fsa9480_cardock_cb(bool attached)
@@ -3979,7 +3638,7 @@ void s3c_config_gpio_table(void)
 {
 	u32 i, gpio;
 
-	for (i = 0; i < ARRAY_SIZE(aries_init_gpios); i++) {
+	for (i = 0; i < ARRAY_SIZE(aries_init_gpios); i) {
 		gpio = aries_init_gpios[i].num;
 		if (system_rev <= 0x07 && gpio == S5PV210_GPJ3(3)) {
 			s3c_gpio_cfgpin(gpio, S3C_GPIO_OUTPUT);
@@ -3996,7 +3655,7 @@ void s3c_config_gpio_table(void)
 	}
 }
 
-#define S5PV210_PS_HOLD_CONTROL_REG (S3C_VA_SYS+0xE81C)
+#define S5PV210_PS_HOLD_CONTROL_REG (S3C_VA_SYS0xE81C)
 static void aries_power_off(void)
 {
 	while (1) {
@@ -4302,7 +3961,7 @@ void s3c_config_sleep_gpio_table(int array_size, unsigned int (*gpio_table)[3])
 {
 	u32 i, gpio;
 
-	for (i = 0; i < array_size; i++) {
+	for (i = 0; i < array_size; i) {
 		gpio = gpio_table[i][0];
 		s3c_gpio_slp_cfgpin(gpio, gpio_table[i][1]);
 		s3c_gpio_slp_setpull_updown(gpio, gpio_table[i][2]);
@@ -4377,10 +4036,6 @@ void s3c_config_sleep_gpio(void)
 }
 EXPORT_SYMBOL(s3c_config_sleep_gpio);
 
-static unsigned long wlan_reglock_flags = 0;
-static spinlock_t wlan_reglock = SPIN_LOCK_UNLOCKED;
-
-
 static unsigned int wlan_sdio_on_table[][4] = {
 	{GPIO_WLAN_SDIO_CLK, GPIO_WLAN_SDIO_CLK_AF, GPIO_LEVEL_NONE, S3C_GPIO_PULL_NONE},
 	{GPIO_WLAN_SDIO_CMD, GPIO_WLAN_SDIO_CMD_AF, GPIO_LEVEL_NONE, S3C_GPIO_PULL_NONE},
@@ -4398,26 +4053,6 @@ static unsigned int wlan_sdio_off_table[][4] = {
 	{GPIO_WLAN_SDIO_D2, 0, GPIO_LEVEL_NONE, S3C_GPIO_PULL_NONE},
 	{GPIO_WLAN_SDIO_D3, 0, GPIO_LEVEL_NONE, S3C_GPIO_PULL_NONE},
 };
-
-static unsigned int wlan_gpio_table[][4] = {
-	{GPIO_WLAN_nRST, GPIO_WLAN_nRST_AF, GPIO_LEVEL_LOW, S3C_GPIO_PULL_NONE},
-	{GPIO_WLAN_HOST_WAKE, GPIO_WLAN_HOST_WAKE_AF, GPIO_LEVEL_NONE, S3C_GPIO_PULL_DOWN},
-	{GPIO_WLAN_WAKE, GPIO_WLAN_WAKE_AF, GPIO_LEVEL_LOW, S3C_GPIO_PULL_NONE},
-};
-
-
-void s3c_config_gpio_alive_table(int array_size, int (*gpio_table)[4])
-{
-	u32 i, gpio;
-
-	for (i = 0; i < array_size; i++) {
-		gpio = gpio_table[i][0];
-		s3c_gpio_cfgpin(gpio, S3C_GPIO_SFN(gpio_table[i][1]));
-		s3c_gpio_setpull(gpio, gpio_table[i][3]);
-		if (gpio_table[i][2] != GPIO_LEVEL_NONE)
-			gpio_set_value(gpio, gpio_table[i][2]);
-	}
-}
 
 static int wlan_power_en(int onoff)
 {
@@ -4445,7 +4080,7 @@ static int wlan_power_en(int onoff)
 		s3c_gpio_slp_setpull_updown(GPIO_WLAN_BT_EN,
 					S3C_GPIO_PULL_NONE);
 
-		msleep(200);
+		msleep(80);
 	} else {
 		gpio_set_value(GPIO_WLAN_nRST, GPIO_LEVEL_LOW);
 		s3c_gpio_slp_cfgpin(GPIO_WLAN_nRST, S3C_GPIO_SLP_OUT0);
@@ -4474,7 +4109,7 @@ static int wlan_carddetect_en(int onoff)
 	u32 sdio;
 
 	if (onoff) {
-		for (i = 0; i < ARRAY_SIZE(wlan_sdio_on_table); i++) {
+		for (i = 0; i < ARRAY_SIZE(wlan_sdio_on_table); i) {
 			sdio = wlan_sdio_on_table[i][0];
 			s3c_gpio_cfgpin(sdio,
 					S3C_GPIO_SFN(wlan_sdio_on_table[i][1]));
@@ -4483,7 +4118,7 @@ static int wlan_carddetect_en(int onoff)
 				gpio_set_value(sdio, wlan_sdio_on_table[i][2]);
 		}
 	} else {
-		for (i = 0; i < ARRAY_SIZE(wlan_sdio_off_table); i++) {
+		for (i = 0; i < ARRAY_SIZE(wlan_sdio_off_table); i) {
 			sdio = wlan_sdio_off_table[i][0];
 			s3c_gpio_cfgpin(sdio,
 				S3C_GPIO_SFN(wlan_sdio_off_table[i][1]));
@@ -4509,10 +4144,10 @@ static struct resource wifi_resources[] = {
 };
 
 static struct wifi_mem_prealloc wifi_mem_array[PREALLOC_WLAN_SEC_NUM] = {
-	{NULL, (WLAN_SECTION_SIZE_0 + PREALLOC_WLAN_SECTION_HEADER)},
-	{NULL, (WLAN_SECTION_SIZE_1 + PREALLOC_WLAN_SECTION_HEADER)},
-	{NULL, (WLAN_SECTION_SIZE_2 + PREALLOC_WLAN_SECTION_HEADER)},
-	{NULL, (WLAN_SECTION_SIZE_3 + PREALLOC_WLAN_SECTION_HEADER)}
+	{NULL, (WLAN_SECTION_SIZE_0  PREALLOC_WLAN_SECTION_HEADER)},
+	{NULL, (WLAN_SECTION_SIZE_1  PREALLOC_WLAN_SECTION_HEADER)},
+	{NULL, (WLAN_SECTION_SIZE_2  PREALLOC_WLAN_SECTION_HEADER)},
+	{NULL, (WLAN_SECTION_SIZE_3  PREALLOC_WLAN_SECTION_HEADER)}
 };
 
 static void *aries_mem_prealloc(int section, unsigned long size)
@@ -4534,7 +4169,7 @@ int __init aries_init_wifi_mem(void)
 	int i;
 	int j;
 
-	for (i = 0 ; i < WLAN_SKB_BUF_NUM ; i++) {
+	for (i = 0 ; i < WLAN_SKB_BUF_NUM ; i) {
 		wlan_static_skb[i] = dev_alloc_skb(
 				((i < (WLAN_SKB_BUF_NUM / 2)) ? 4096 : 8192));
 
@@ -4542,7 +4177,7 @@ int __init aries_init_wifi_mem(void)
 			goto err_skb_alloc;
 	}
 
-	for (i = 0 ; i < PREALLOC_WLAN_SEC_NUM ; i++) {
+	for (i = 0 ; i < PREALLOC_WLAN_SEC_NUM ; i) {
 		wifi_mem_array[i].mem_ptr =
 				kmalloc(wifi_mem_array[i].size, GFP_KERNEL);
 
@@ -4553,14 +4188,14 @@ int __init aries_init_wifi_mem(void)
 
  err_mem_alloc:
 	pr_err("Failed to mem_alloc for WLAN\n");
-	for (j = 0 ; j < i ; j++)
+	for (j = 0 ; j < i ; j)
 		kfree(wifi_mem_array[j].mem_ptr);
 
 	i = WLAN_SKB_BUF_NUM;
 
  err_skb_alloc:
 	pr_err("Failed to skb_alloc for WLAN\n");
-	for (j = 0 ; j < i ; j++)
+	for (j = 0 ; j < i ; j)
 		dev_kfree_skb(wlan_static_skb[j]);
 
 	return -ENOMEM;
@@ -4743,10 +4378,10 @@ static void __init aries_fixup(struct machine_desc *desc,
 	mi->bank[2].node = 2;
 	mi->nr_banks = 3;
 
-	ram_console_start = mi->bank[2].start + mi->bank[2].size;
+	ram_console_start = mi->bank[2].start  mi->bank[2].size;
 	ram_console_size = SZ_1M - SZ_4K;
 
-	pm_debug_scratchpad = ram_console_start + ram_console_size;
+	pm_debug_scratchpad = ram_console_start  ram_console_size;
 }
 
 /* this function are used to detect s5pc110 chip version temporally */
@@ -4805,7 +4440,7 @@ static void __init fsa9480_gpio_init(void)
 static void __init setup_ram_console_mem(void)
 {
 	ram_console_resource[0].start = ram_console_start;
-	ram_console_resource[0].end = ram_console_start + ram_console_size - 1;
+	ram_console_resource[0].end = ram_console_start  ram_console_size - 1;
 }
 
 static void __init sound_init(void)
@@ -4929,7 +4564,6 @@ static void __init aries_machine_init(void)
 	s3c_i2c1_set_platdata(NULL);
 	s3c_i2c2_set_platdata(NULL);
 
-    	set_adc_table();
 	/* H/W I2C lines */
 
 	/* mxt224 */
@@ -4946,14 +4580,11 @@ static void __init aries_machine_init(void)
 	/* max8998 */
 	i2c_register_board_info(6, i2c_devs6, ARRAY_SIZE(i2c_devs6));
 
-#if defined (ENABLE_VIRTUAL_KEYS)
-	/* virtual keys */	
-	aries_virtual_keys_init();
-#else
+
 	/* cypress touchkey */
 	touch_keypad_gpio_init();
 	i2c_register_board_info(10, i2c_devs10, ARRAY_SIZE(i2c_devs10));
-#endif	
+
 
 	/* FSA9480 */
 	fsa9480_gpio_init();
@@ -5124,7 +4755,7 @@ MACHINE_START(SMDKC110, "SMDKC110")
 	/* Maintainer: Kukjin Kim <kgene.kim@samsung.com> */
 	.phys_io	= S3C_PA_UART & 0xfff00000,
 	.io_pg_offst	= (((u32)S3C_VA_UART) >> 18) & 0xfffc,
-	.boot_params	= S5P_PA_SDRAM + 0x100,
+	.boot_params	= S5P_PA_SDRAM  0x100,
 	.fixup		= aries_fixup,
 	.init_irq	= s5pv210_init_irq,
 	.map_io		= aries_map_io,
@@ -5139,7 +4770,7 @@ MACHINE_END
 MACHINE_START(ARIES, "aries")
 	.phys_io	= S3C_PA_UART & 0xfff00000,
 	.io_pg_offst	= (((u32)S3C_VA_UART) >> 18) & 0xfffc,
-	.boot_params	= S5P_PA_SDRAM + 0x100,
+	.boot_params	= S5P_PA_SDRAM  0x100,
 	.fixup		= aries_fixup,
 	.init_irq	= s5pv210_init_irq,
 	.map_io		= aries_map_io,

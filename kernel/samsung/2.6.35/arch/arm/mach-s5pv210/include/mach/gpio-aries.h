@@ -356,6 +356,7 @@
 #define GPIO_GPH16				S5PV210_GPH1(6)
 
 #define GPIO_PHONE_ACTIVE		S5PV210_GPH1(7)
+#define GPIO_PHONE_ACTIVE_AF  2
 
 #define GPIO_KBC0				S5PV210_GPH2(0)
 #define GPIO_KBC0_AF			3
@@ -648,11 +649,7 @@
 #define 	GPIO_FLM_TXD_AF 	2
 
 #define		GPIO_AP_PS_HOLD		S5PV210_GPH0(0)
-#define		GPIO_AP_PS_HOLD_AF	1 //?
-
-
-#define		GPIO_PHONE_ACTIVE		S5PV210_GPH1(7)
-#define		GPIO_PHONE_ACTIVE_AF	2 //?
+#define		GPIO_AP_PS_HOLD_AF	1 
 
 #define		GPIO_N_POWER		S5PV210_GPH2(6)
 #define		GPIO_N_POWER_AF		2 //?
@@ -668,4 +665,5 @@
 
 #define 	GPIO_JACK_INT_N 	S5PV210_GPH2(7)
 #define		GPIO_JACK_INT_N_AF	0xFF
+#define _3_GPIO_TOUCH_CE    S5PV210_GPJ3(3)
 #endif

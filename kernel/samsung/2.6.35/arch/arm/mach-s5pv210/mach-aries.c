@@ -756,34 +756,6 @@ static struct max8998_regulator_data aries_regulators[] = {
 	{ MAX8998_BUCK3, &aries_buck3_data },
 	{ MAX8998_BUCK4, &aries_buck4_data },
 };
-static enum cable_type_t set_cable_status;
-
-static void max8998_charger_register_callbacks(
-		struct max8998_charger_callbacks *ptr)
-{
-	callbacks = ptr;
-	/* if there was a cable status change before the charger was
-	ready, send this now */
-	if ((set_cable_status != 0) && callbacks && callbacks->set_cable)
-		callbacks->set_cable(callbacks, set_cable_status);
-}
-
-static struct max8998_charger_data aries_charger = {
-	.register_callbacks = &max8998_charger_register_callbacks,
-};
-
-static void set_adc_table(void)
-{
-	if (system_rev < 0x30) {
-		aries_charger.adc_table = temper_table_oled;
-		aries_charger.adc_array_size =
-			ARRAY_SIZE(temper_table_oled);
-	} else {
-		aries_charger.adc_table = temper_table_tft;
-		aries_charger.adc_array_size =
-			ARRAY_SIZE(temper_table_tft);
-	}
-}
 static struct max8998_adc_table_data temper_table[] =  {
   {  264,  650 },
   {  275,  640 },
@@ -879,6 +851,19 @@ static struct max8998_charger_data aries_charger = {
 };
 
 
+
+static void set_adc_table(void)
+{
+	if (system_rev < 0x30) {
+		aries_charger.adc_table = temper_table_oled;
+		aries_charger.adc_array_size =
+			ARRAY_SIZE(temper_table_oled);
+	} else {
+		aries_charger.adc_table = temper_table_tft;
+		aries_charger.adc_array_size =
+			ARRAY_SIZE(temper_table_tft);
+	}
+}
 static struct max8998_platform_data max8998_pdata = {
 	.num_regulators = ARRAY_SIZE(aries_regulators),
 	.regulators     = aries_regulators,

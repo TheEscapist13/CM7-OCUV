@@ -1166,10 +1166,10 @@ static void touch_keypad_onoff(int onoff)
 	if (onoff == TOUCHKEY_OFF)
 		msleep(30);
 	else
-		msleep(25);
+		msleep(50);
 }
 
-static void touch_keypad_gpio_sleep(int onoff){
+static void touch_keypad_gpio_onoff(int onoff){
 	if(onoff == TOUCHKEY_ON){
 		/*
 		* reconfigure gpio to activate touchkey controller vdd in sleep mode
@@ -1206,6 +1206,7 @@ static struct touchkey_platform_data touchkey_data = {
 	.keycode_cnt = ARRAY_SIZE(touch_keypad_code),
 	.keycode = touch_keypad_code,
 	.touchkey_onoff = touch_keypad_onoff,
+	.touchkey_sleep_onoff = touch_keypad_gpio_onoff,
 	.fw_name = "cypress-touchkey.bin",
 	.scl_pin = _3_TOUCH_SCL_28V,
 	.sda_pin = _3_TOUCH_SDA_28V,

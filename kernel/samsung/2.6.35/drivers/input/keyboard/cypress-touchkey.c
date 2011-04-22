@@ -159,7 +159,6 @@ out:
 static irqreturn_t touchkey_interrupt_thread(int irq, void *touchkey_devdata)
 {
 	u8 data;
-	printk("cypress: touchkey_interrupt_thread\n"); 
 	int i;
 	int ret;
 	int scancode;
@@ -421,7 +420,7 @@ static void enable_led_notification(void){
 			/* write to i2cbus, enable backlights */
 			enable_touchkey_backlights();
 
-			pr_info("%s: notification led enabled\n", __FUNCTION__);
+			printk("%s: notification led enabled\n", __FUNCTION__);
 		}
 		else
 			pr_info("%s: cannot set notification led, touchkeys are enabled\n",__FUNCTION__);
@@ -496,20 +495,20 @@ static ssize_t notification_led_status_read(struct device *dev, struct device_at
 static ssize_t notification_led_status_write(struct device *dev, struct device_attribute *attr, const char *buf, size_t size)
 {
 	unsigned int data;
-
 	if(sscanf(buf, "%u\n", &data) == 1) {
 		if(data == 0 || data == 1){
-			pr_devel("%s: %u \n", __FUNCTION__, data);
-			if (data == 1)
+			if (data == 1){
 				enable_led_notification();
-
-			if(data == 0)
+				
+			}
+			if(data == 0) {
 				disable_led_notification();
+			}
 
 		} else
-			pr_info("%s: wrong input %u\n", __FUNCTION__, data);
+			printk("%s: wrong input %u\n", __FUNCTION__, data);
 	} else
-		pr_info("%s: input error\n", __FUNCTION__);
+		printk("%s: input error\n", __FUNCTION__);
 
 	return size;
 }

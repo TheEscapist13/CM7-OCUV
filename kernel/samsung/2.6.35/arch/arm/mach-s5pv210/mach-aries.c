@@ -41,8 +41,8 @@
 #include <mach/map.h>
 #include <mach/regs-clock.h>
 #include <mach/gpio.h>
-#include <mach/gpio-settings.h>
 #include <mach/gpio-aries.h>
+#include <mach/gpio-settings.h>
 #include <mach/adc.h>
 #include <mach/param.h>
 #include <mach/system.h>
@@ -101,8 +101,8 @@
 
 #include "aries.h"
 
-//#undef pr_debug
-//#define pr_debug pr_info
+#undef pr_debug
+#define pr_debug pr_info
 
 struct class *sec_class;
 EXPORT_SYMBOL(sec_class);
@@ -129,7 +129,6 @@ EXPORT_SYMBOL(sec_get_param_value);
 #define WLAN_SECTION_SIZE_3	(PREALLOC_WLAN_BUF_NUM * 1024)
 
 #define WLAN_SKB_BUF_NUM	16
-
 
 static struct sk_buff *wlan_static_skb[WLAN_SKB_BUF_NUM];
 
@@ -286,7 +285,7 @@ static struct s3cfb_lcd s6e63m0 = {
 	.p_width = 52,
 	.p_height = 86,
 	.bpp = 24,
-	.freq = 72,
+	.freq = 60,
 
 	.timing = {
 		.h_fp = 16,
@@ -306,7 +305,6 @@ static struct s3cfb_lcd s6e63m0 = {
 	},
 };
 
-
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC0 (12288 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC1 (9900 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC2 (12288 * SZ_1K)
@@ -316,11 +314,11 @@ static struct s3cfb_lcd s6e63m0 = {
 					     S5PV210_LCD_HEIGHT * 4 * \
 					     CONFIG_FB_S3C_NR_BUFFERS)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_JPEG (8192 * SZ_1K)
-
 #define  S5PV210_ANDROID_PMEM_MEMSIZE_PMEM (5550 * SZ_1K)
 #define  S5PV210_ANDROID_PMEM_MEMSIZE_PMEM_GPU1 (3000 * SZ_1K)
 #define  S5PV210_ANDROID_PMEM_MEMSIZE_PMEM_ADSP (1500 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_TEXTSTREAM (3000 * SZ_1K)
+
 
 static struct s5p_media_device aries_media_devs[] = {
 	[0] = {
@@ -376,31 +374,31 @@ static struct s5p_media_device aries_media_devs[] = {
 	[7] = {
 		.id = S5P_MDEV_PMEM,
 		.name = "pmem",
+		.bank = 0,
 		.memsize = S5PV210_ANDROID_PMEM_MEMSIZE_PMEM,
 		.paddr = 0,
-		.bank = 0,
 	},
-        [8] = {
-                .id = S5P_MDEV_PMEM_GPU1,
-                .name = "pmem_gpu1",
-                .memsize = S5PV210_ANDROID_PMEM_MEMSIZE_PMEM_GPU1,
-                .paddr = 0,
+	[8] = {
+		.id = S5P_MDEV_PMEM_GPU1,
+		.name = "pmem_gpu1",
 		.bank = 0,
-        },
-        [9] = {
-                .id = S5P_MDEV_PMEM_ADSP,
-                .name = "pmem_adsp",
-                .memsize = S5PV210_ANDROID_PMEM_MEMSIZE_PMEM_ADSP,
-                .paddr = 0,
+		.memsize = S5PV210_ANDROID_PMEM_MEMSIZE_PMEM_GPU1,
+		.paddr = 0,
+	},
+	[9] = {
+		.id = S5P_MDEV_PMEM_ADSP,
+		.name = "pmem_adsp",
 		.bank = 0,
-        },
-        [10] = {
-        	.id = S5P_MDEV_TEXSTREAM,
+		.memsize = S5PV210_ANDROID_PMEM_MEMSIZE_PMEM_ADSP,
+		.paddr = 0,
+		},
+	[10] = {
+		.id = S5P_MDEV_TEXSTREAM,
 		.name = "s3c_bc",
 		.bank = 1,
 		.memsize = S5PV210_VIDEO_SAMSUNG_MEMSIZE_TEXTSTREAM,
 		.paddr = 0,
-	},  
+	},	
 #endif
 };
 
@@ -648,8 +646,8 @@ static struct regulator_init_data aries_ldo15_data = {
 static struct regulator_init_data aries_ldo16_data = {
 	.constraints	= {
 		.name		= "VGA_AVDD_2.8V",
-		.min_uV		= 1800000,
-		.max_uV		= 1800000,
+		.min_uV		= 2800000,
+		.max_uV		= 2800000,
 		.apply_uV	= 1,
 		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
 		.state_mem	= {
@@ -756,80 +754,81 @@ static struct max8998_regulator_data aries_regulators[] = {
 	{ MAX8998_BUCK3, &aries_buck3_data },
 	{ MAX8998_BUCK4, &aries_buck4_data },
 };
+
 static struct max8998_adc_table_data temper_table[] =  {
-  {  264,  650 },
-  {  275,  640 },
-  {  286,  630 },
-  {  293,  620 },
-  {  299,  610 },
-  {  306,  600 },
-  {  324,  590 },
-  {  341,  580 },
-  {  354,  570 },
-  {  368,  560 },
-  {  381,  550 },
-  {  396,  540 },
-  {  411,  530 },
-  {  427,  520 },
-  {  442,  510 },
-  {  457,  500 },
-  {  472,  490 },
-  {  487,  480 },
-  {  503,  470 },
-  {  518,  460 },
-  {  533,  450 },
-  {  554,  440 },
-  {  574,  430 },
-  {  595,  420 },
-  {  615,  410 },
-  {  636,  400 },
-  {  656,  390 },
-  {  677,  380 },
-  {  697,  370 },
-  {  718,  360 },
-  {  738,  350 },
-  {  761,  340 },
-  {  784,  330 },
-  {  806,  320 },
-  {  829,  310 },
-  {  852,  300 },
-  {  875,  290 },
-  {  898,  280 },
-  {  920,  270 },
-  {  943,  260 },
-  {  966,  250 },
-  {  990,  240 },
-  { 1013,  230 },
-  { 1037,  220 },
-  { 1060,  210 },
-  { 1084,  200 },
-  { 1108,  190 },
-  { 1131,  180 },
-  { 1155,  170 },
-  { 1178,  160 },
-  { 1202,  150 },
-  { 1226,  140 },
-  { 1251,  130 },
-  { 1275,  120 },
-  { 1299,  110 },
-  { 1324,  100 },
-  { 1348,   90 },
-  { 1372,   80 },
-  { 1396,   70 },
-  { 1421,   60 },
-  { 1445,   50 },
-  { 1468,   40 },
-  { 1491,   30 },
-  { 1513,   20 },
-  { 1536,   10 },
-  { 1559,    0 },
-  { 1577,  -10 },
-  { 1596,  -20 },
-  { 1614,  -30 },
-  { 1619,  -40 },
-  { 1632,  -50 },
-  { 1658,  -60 },
-  { 1667,  -70 }, 
+	{  264,  650 },
+	{  275,  640 },
+	{  286,  630 },
+	{  293,  620 },
+	{  299,  610 },
+	{  306,  600 },
+	{  324,  590 },
+	{  341,  580 },
+	{  354,  570 },
+	{  368,  560 },
+	{  381,  550 },
+	{  396,  540 },
+	{  411,  530 },
+	{  427,  520 },
+	{  442,  510 },
+	{  457,  500 },
+	{  472,  490 },
+	{  487,  480 },
+	{  503,  470 },
+	{  518,  460 },
+	{  533,  450 },
+	{  554,  440 },
+	{  574,  430 },
+	{  595,  420 },
+	{  615,  410 },
+	{  636,  400 },
+	{  656,  390 },
+	{  677,  380 },
+	{  697,  370 },
+	{  718,  360 },
+	{  738,  350 },
+	{  761,  340 },
+	{  784,  330 },
+	{  806,  320 },
+	{  829,  310 },
+	{  852,  300 },
+	{  875,  290 },
+	{  898,  280 },
+	{  920,  270 },
+	{  943,  260 },
+	{  966,  250 },
+	{  990,  240 },
+	{ 1013,  230 },
+	{ 1037,  220 },
+	{ 1060,  210 },
+	{ 1084,  200 },
+	{ 1108,  190 },
+	{ 1131,  180 },
+	{ 1155,  170 },
+	{ 1178,  160 },
+	{ 1202,  150 },
+	{ 1226,  140 },
+	{ 1251,  130 },
+	{ 1275,  120 },
+	{ 1299,  110 },
+	{ 1324,  100 },
+	{ 1348,   90 },
+	{ 1372,   80 },
+	{ 1396,   70 },
+	{ 1421,   60 },
+	{ 1445,   50 },
+	{ 1468,   40 },
+	{ 1491,   30 },
+	{ 1513,   20 },
+	{ 1536,   10 },
+	{ 1559,    0 },
+	{ 1577,  -10 },
+	{ 1596,  -20 },
+	{ 1614,  -30 },
+	{ 1619,  -40 },
+	{ 1632,  -50 },
+	{ 1658,  -60 },
+	{ 1667,  -70 }, 
 };
 struct max8998_charger_callbacks *charger_callbacks;
 static enum cable_type_t set_cable_status;
@@ -850,20 +849,6 @@ static struct max8998_charger_data aries_charger = {
 	.adc_array_size		= ARRAY_SIZE(temper_table),
 };
 
-
-
-static void set_adc_table(void)
-{
-	if (system_rev < 0x30) {
-		aries_charger.adc_table = temper_table_oled;
-		aries_charger.adc_array_size =
-			ARRAY_SIZE(temper_table_oled);
-	} else {
-		aries_charger.adc_table = temper_table_tft;
-		aries_charger.adc_array_size =
-			ARRAY_SIZE(temper_table_tft);
-	}
-}
 static struct max8998_platform_data max8998_pdata = {
 	.num_regulators = ARRAY_SIZE(aries_regulators),
 	.regulators     = aries_regulators,
@@ -885,74 +870,68 @@ static void tl2796_cfg_gpio(struct platform_device *pdev)
 {
 	int i;
 
-	for (i = 0; i < 8; i) 
+	for (i = 0; i < 8; i++)
 		s3c_gpio_cfgpin(S5PV210_GPF0(i), S3C_GPIO_SFN(2));
 
-	for (i = 0; i < 8; i) 
+	for (i = 0; i < 8; i++)
 		s3c_gpio_cfgpin(S5PV210_GPF1(i), S3C_GPIO_SFN(2));
-		
-	for (i = 0; i < 8; i) 
+
+	for (i = 0; i < 8; i++)
 		s3c_gpio_cfgpin(S5PV210_GPF2(i), S3C_GPIO_SFN(2));
-		
-	for (i = 0; i < 4; i) 
+
+	for (i = 0; i < 4; i++)
 		s3c_gpio_cfgpin(S5PV210_GPF3(i), S3C_GPIO_SFN(2));
-		
+
 	/* mDNIe SEL: why we shall write 0x2 ? */
 #ifdef CONFIG_FB_S3C_MDNIE
 	writel(0x1, S5P_MDNIE_SEL);
 #else
 	writel(0x2, S5P_MDNIE_SEL);
 #endif
+
 	s3c_gpio_setpull(GPIO_OLED_DET, S3C_GPIO_PULL_NONE);
- 	s3c_gpio_setpull(GPIO_OLED_ID, S3C_GPIO_PULL_NONE);
- 	s3c_gpio_setpull(GPIO_DIC_ID, S3C_GPIO_PULL_NONE);
+	s3c_gpio_setpull(GPIO_OLED_ID, S3C_GPIO_PULL_NONE);
+	s3c_gpio_setpull(GPIO_DIC_ID, S3C_GPIO_PULL_NONE);
 }
 
 void lcd_cfg_gpio_early_suspend(void)
 {
 	int i;
 
-	for (i = 0; i < 8; i) {
+	for (i = 0; i < 8; i++) {
 		s3c_gpio_cfgpin(S5PV210_GPF0(i), S3C_GPIO_OUTPUT);
 		gpio_set_value(S5PV210_GPF0(i), 0);
 	}
 
-	for (i = 0; i < 8; i) {
+	for (i = 0; i < 8; i++) {
 		s3c_gpio_cfgpin(S5PV210_GPF1(i), S3C_GPIO_OUTPUT);
 		gpio_set_value(S5PV210_GPF1(i), 0);
 	}
 
-	for (i = 0; i < 8; i) {
+	for (i = 0; i < 8; i++) {
 		s3c_gpio_cfgpin(S5PV210_GPF2(i), S3C_GPIO_OUTPUT);
 		gpio_set_value(S5PV210_GPF2(i), 0);
 	}
 
-	for (i = 0; i < 4; i) {
+	for (i = 0; i < 4; i++) {
 		s3c_gpio_cfgpin(S5PV210_GPF3(i), S3C_GPIO_OUTPUT);
 		gpio_set_value(S5PV210_GPF3(i), 0);
 	}
 
 	gpio_set_value(GPIO_MLCD_RST, 0);
 
-
 	gpio_set_value(GPIO_DISPLAY_CS, 0);
-
-
 	gpio_set_value(GPIO_DISPLAY_CLK, 0);
-
-
 	gpio_set_value(GPIO_DISPLAY_SI, 0);
 
-	s3c_gpio_setpull(GPIO_OLED_DET, S3C_GPIO_PULL_DOWN);	
+	s3c_gpio_setpull(GPIO_OLED_DET, S3C_GPIO_PULL_DOWN);
 	s3c_gpio_setpull(GPIO_OLED_ID, S3C_GPIO_PULL_DOWN);
 	s3c_gpio_setpull(GPIO_DIC_ID, S3C_GPIO_PULL_DOWN);
-
 }
 EXPORT_SYMBOL(lcd_cfg_gpio_early_suspend);
 
 void lcd_cfg_gpio_late_resume(void)
 {
-
 
 }
 EXPORT_SYMBOL(lcd_cfg_gpio_late_resume);
@@ -996,11 +975,9 @@ static struct s3c_platform_fb tl2796_data __initdata = {
 
 	.lcd = &s6e63m0,
 	.cfg_gpio	= tl2796_cfg_gpio,
-	.backlight_on  = tl2796_backlight_on,
-	.reset_lcd  = tl2796_reset_lcd,
+	.backlight_on	= tl2796_backlight_on,
+	.reset_lcd	= tl2796_reset_lcd,
 };
-
-
 
 #define LCD_BUS_NUM     3
 #define DISPLAY_CS      S5PV210_MP01(1)
@@ -1036,10 +1013,10 @@ static struct platform_device s3c_device_spi_gpio = {
 	},
 };
 
-static  struct  i2c_gpio_platform_data  i2c4_platdata = {
+static struct i2c_gpio_platform_data i2c4_platdata = {
 	.sda_pin		= GPIO_AP_SDA_18V,
 	.scl_pin		= GPIO_AP_SCL_18V,
-	.udelay			= 2,    /* 250KHz */
+	.udelay			= 2, /* 250KHz */
 	.sda_is_open_drain	= 0,
 	.scl_is_open_drain	= 0,
 	.scl_is_output_only	= 0,
@@ -1051,10 +1028,10 @@ static struct platform_device s3c_device_i2c4 = {
 	.dev.platform_data	= &i2c4_platdata,
 };
 
-static  struct  i2c_gpio_platform_data  i2c5_platdata = {
+static struct i2c_gpio_platform_data i2c5_platdata = {
 	.sda_pin		= GPIO_AP_SDA_28V,
 	.scl_pin		= GPIO_AP_SCL_28V,
-	.udelay			= 2,    /* 250KHz */
+	.udelay			= 2, /* 250KHz */
 	.sda_is_open_drain	= 0,
 	.scl_is_open_drain	= 0,
 	.scl_is_output_only	= 0,
@@ -1093,9 +1070,8 @@ static  struct  i2c_gpio_platform_data  i2c7_platdata = {
 static struct platform_device s3c_device_i2c7 = {
 	.name			= "i2c-gpio",
 	.id			= 7,
-	.dev.platform_data      = &i2c7_platdata,
+	.dev.platform_data	= &i2c7_platdata,
 };
-
 // For FM radio
 #if defined (CONFIG_SAMSUNG_GALAXYS) || defined (CONFIG_SAMSUNG_GALAXYSB)
 static  struct  i2c_gpio_platform_data  i2c8_platdata = {
@@ -1129,7 +1105,7 @@ static struct platform_device s3c_device_i2c9 = {
 	.dev.platform_data	= &i2c9_platdata,
 };
 
-static  struct  i2c_gpio_platform_data  i2c10_platdata = {
+static struct i2c_gpio_platform_data i2c10_platdata = {
 	.sda_pin                = _3_TOUCH_SDA_28V,
 	.scl_pin                = _3_TOUCH_SCL_28V,
 	.udelay                 = 0,    /* 250KHz */
@@ -1144,7 +1120,7 @@ static struct platform_device s3c_device_i2c10 = {
 	.dev.platform_data	= &i2c10_platdata,
 };
 
-static  struct  i2c_gpio_platform_data  i2c11_platdata = {
+static struct i2c_gpio_platform_data i2c11_platdata = {
 	.sda_pin                = GPIO_ALS_SDA_28V,
 	.scl_pin                = GPIO_ALS_SCL_28V,
 	.udelay                 = 2,    /* 250KHz */
@@ -1159,7 +1135,7 @@ static struct platform_device s3c_device_i2c11 = {
 	.dev.platform_data	= &i2c11_platdata,
 };
 
-static  struct  i2c_gpio_platform_data  i2c12_platdata = {
+static struct i2c_gpio_platform_data i2c12_platdata = {
 	.sda_pin                = GPIO_MSENSE_SDA_28V,
 	.scl_pin                = GPIO_MSENSE_SCL_28V,
 	.udelay                 = 0,    /* 250KHz */
@@ -1210,6 +1186,8 @@ static void touch_keypad_gpio_sleep(int onoff){
 	}
 }
 
+
+
 static const int touch_keypad_code[] = {
 #if defined (CONFIG_SAMSUNG_GALAXYS) || defined (CONFIG_SAMSUNG_GALAXYSB)
 	KEY_MENU,
@@ -1228,7 +1206,6 @@ static struct touchkey_platform_data touchkey_data = {
 	.keycode_cnt = ARRAY_SIZE(touch_keypad_code),
 	.keycode = touch_keypad_code,
 	.touchkey_onoff = touch_keypad_onoff,
-	.touchkey_sleep_onoff = touch_keypad_gpio_sleep,
 	.fw_name = "cypress-touchkey.bin",
 	.scl_pin = _3_TOUCH_SCL_28V,
 	.sda_pin = _3_TOUCH_SDA_28V,
@@ -1301,9 +1278,9 @@ static struct platform_device aries_input_device = {
 #ifdef CONFIG_S5P_ADC
 static struct s3c_adc_mach_info s3c_adc_platform __initdata = {
 	/* s5pc110 support 12-bit resolution */
-	.delay  = 10000,
-	.presc  = 65,
-	.resolution = 12,
+	.delay		= 10000,
+	.presc		= 65,
+	.resolution	= 12,
 };
 #endif
 
@@ -1322,15 +1299,16 @@ static void set_shared_mic_bias(void)
 
 static void wm8994_set_mic_bias(bool on)
 {
-    pr_debug("%s: on=%d\n", __func__, on ? 1 : 0);
+    pr_debug("%s: system_rev=%d, on=%d\n", __func__, system_rev, on ? 1 : 0);
 	if (system_rev < 0x09) {
 		unsigned long flags;
 		spin_lock_irqsave(&mic_bias_lock, flags);
 		wm8994_mic_bias = on;
 		set_shared_mic_bias();
 		spin_unlock_irqrestore(&mic_bias_lock, flags);
-	} else
+	} else {
 		gpio_set_value(GPIO_MICBIAS_EN, on);
+    }
 }
 
 static void sec_jack_set_micbias_state(bool on)
@@ -1346,27 +1324,31 @@ static void sec_jack_set_micbias_state(bool on)
         pr_debug("%s: on=%d\n", __func__, on ? 1 : 0);
 		gpio_set_value(GPIO_EARPATH_SEL, on);
 		gpio_set_value(GPIO_EAR_MICBIAS_EN, on);
-#elif defined (CONFIG_SAMSUNG_VIBRANT)
+#elif defined (CONFIG_SAMSUNG_VIBRANT) || defined(CONFIG_SAMSUNG_GALAXYS) || defined(CONFIG_SAMSUNG_GALAXYSB)
         pr_debug("%s: on=%d\n", __func__, on ? 1 : 0);
 		gpio_set_value(GPIO_EARPATH_SEL, on);
+#if defined(CONFIG_SAMSUNG_VIBRANT) //hate ifdefs? here's a nested one for your pleasure . . .
         if((HWREV == 0x0A) || (HWREV == 0x0C) || (HWREV == 0x0D) || (HWREV == 0x0E) ) //0x0A:00, 0x0C:00, 0x0D:01, 0x0E:05
             gpio_set_value(GPIO_MICBIAS_EN, on);
-        else
+        else {
             gpio_set_value(GPIO_MICBIAS_EN2, on);
+            gpio_set_value(GPIO_MICBIAS_EN, on);
+        }
 #else
-	        //FIXME
-		//gpio_set_value(GPIO_EAR_MICBIAS_EN, on);
+		gpio_set_value(GPIO_MICBIAS_EN, on);
+#endif
+#else
+		gpio_set_value(GPIO_EAR_MICBIAS_EN, on);
 #endif
     }
 }
 
 static struct wm8994_platform_data wm8994_pdata = {
 	.ldo = GPIO_CODEC_LDO_EN,
-#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined (CONFIG_SAMSUNG_VIBRANT)
+#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined (CONFIG_SAMSUNG_VIBRANT) || defined(CONFIG_SAMSUNG_GALAXYS) || defined(CONFIG_SAMSUNG_GALAXYSB)
     .ear_sel = GPIO_EARPATH_SEL,
 #else
-	//FIXME
-	//.ear_sel = GPIO_EAR_SEL,
+	.ear_sel = GPIO_EAR_SEL,
 #endif
 	.set_mic_bias = wm8994_set_mic_bias,
 };
@@ -1582,16 +1564,16 @@ static int s5ka3dfx_power_off(void)
 	// Turn CAM_ISP_SYS_2.8V off
 	gpio_direction_output(GPIO_GPB7, 1);
 	gpio_set_value(GPIO_GPB7, 0);
-	
+
 	gpio_free(GPIO_GPB7);
 	gpio_free(GPIO_CAM_VGA_nRST);
 	gpio_free(GPIO_CAM_VGA_nSTBY);
+
 	return err;
 }
 
 static int s5ka3dfx_power_en(int onoff)
 {
-
 	int err = 0;
 	mutex_lock(&s5ka3dfx_lock);
 	/* we can be asked to turn off even if we never were turned
@@ -1667,8 +1649,8 @@ static struct s3c_platform_camera s5ka3dfx = {
 
 
 /*
- * Guide for Camera Configuration for Crespo board
- * ITU CAM CH A: LSI s5k4ecgx
+ * Guide for Camera Configuration for aries board
+ * CE147
  */
 static DEFINE_MUTEX(ce147_lock);
 static struct regulator *cam_isp_core_regulator;
@@ -1989,11 +1971,12 @@ static struct s3c_platform_jpeg jpeg_plat __initdata = {
 };
 #endif
 
-/* I2C0 
+/* I2C0 */
+/* unused (codeworkx - dani.hillenbrand@googlemail.com)
 static struct i2c_board_info i2c_devs0[] __initdata = {
-
 };
 */
+
 static struct i2c_board_info i2c_devs4[] __initdata = {
 	{
 		I2C_BOARD_INFO("wm8994", (0x34>>1)),
@@ -2001,7 +1984,8 @@ static struct i2c_board_info i2c_devs4[] __initdata = {
 	},
 };
 
-/* I2C1 
+/* I2C1 */
+/* unused (codeworkx - dani.hillenbrand@googlemail.com)
 static struct i2c_board_info i2c_devs1[] __initdata = {
 };
 */
@@ -2083,15 +2067,15 @@ static struct i2c_board_info i2c_devs2[] __initdata = {
 
 static void mxt224_init(void)
 {
-
 	return;
 }
+
 /* I2C2 */
 static struct i2c_board_info i2c_devs10[] __initdata = {
 	{
 		I2C_BOARD_INFO(CYPRESS_TOUCHKEY_DEV_NAME, 0x20),
-		.platform_data  = &touchkey_data,
-		.irq = (IRQ_EINT_GROUP22_BASE  1),
+		.platform_data = &touchkey_data,
+		.irq = (IRQ_EINT_GROUP22_BASE + 1),
 	},
 };
 
@@ -2120,14 +2104,14 @@ static void fsa9480_usb_cb(bool attached)
 
 	set_cable_status = attached ? CABLE_TYPE_USB : CABLE_TYPE_NONE;
 	if (charger_callbacks && charger_callbacks->set_cable)
- 	charger_callbacks->set_cable(charger_callbacks, set_cable_status);
+		charger_callbacks->set_cable(charger_callbacks, set_cable_status);
 }
 
 static void fsa9480_charger_cb(bool attached)
 {
 	set_cable_status = attached ? CABLE_TYPE_AC : CABLE_TYPE_NONE;
 	if (charger_callbacks && charger_callbacks->set_cable)
-	charger_callbacks->set_cable(charger_callbacks, set_cable_status);
+		charger_callbacks->set_cable(charger_callbacks, set_cable_status);
 }
 
 static struct switch_dev switch_dock = {
@@ -2152,7 +2136,7 @@ static void fsa9480_deskdock_cb(bool attached)
 
 	set_cable_status = attached ? CABLE_TYPE_USB : CABLE_TYPE_NONE;
 	if (charger_callbacks && charger_callbacks->set_cable)
-	charger_callbacks->set_cable(charger_callbacks, set_cable_status);
+		charger_callbacks->set_cable(charger_callbacks, set_cable_status);
 }
 
 static void fsa9480_cardock_cb(bool attached)
@@ -3067,7 +3051,7 @@ static struct gpio_init_data aries_init_gpios[] = {
 		.val	= S3C_GPIO_SETPIN_ZERO,
 		.pud	= S3C_GPIO_PULL_NONE,
 		.drv	= S3C_GPIO_DRVSTR_1X,
-	}, { /* GPIO_SEND_END_35 */
+	}, { /* GPIO_EAR_SEND_END_35 */
 		.num	= S5PV210_GPH2(2),
 #if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined (CONFIG_SAMSUNG_VIBRANT)
 		.cfg	= S3C_GPIO_INPUT,
@@ -3372,13 +3356,17 @@ static struct gpio_init_data aries_init_gpios[] = {
 		.drv	= S3C_GPIO_DRVSTR_1X,
 	}, {
 		.num	= S5PV210_GPJ2(5),
+#if defined(CONFIG_SAMSUNG_VIBRANT)
+		.cfg	= S3C_GPIO_OUTPUT,
+#else
 		.cfg	= S3C_GPIO_INPUT,
+#endif
 		.val	= S3C_GPIO_SETPIN_NONE,
 		.pud	= S3C_GPIO_PULL_DOWN,
 		.drv	= S3C_GPIO_DRVSTR_1X,
 	}, {
 		.num	= S5PV210_GPJ2(6),
-#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT)
+#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT) || defined(CONFIG_SAMSUNG_GALAXYS)
 		.cfg	= S3C_GPIO_OUTPUT,
 #else
 		.cfg	= S3C_GPIO_INPUT,
@@ -3623,7 +3611,7 @@ void s3c_config_gpio_table(void)
 {
 	u32 i, gpio;
 
-	for (i = 0; i < ARRAY_SIZE(aries_init_gpios); i) {
+	for (i = 0; i < ARRAY_SIZE(aries_init_gpios); i++) {
 		gpio = aries_init_gpios[i].num;
 		if (system_rev <= 0x07 && gpio == S5PV210_GPJ3(3)) {
 			s3c_gpio_cfgpin(gpio, S3C_GPIO_OUTPUT);
@@ -3640,7 +3628,7 @@ void s3c_config_gpio_table(void)
 	}
 }
 
-#define S5PV210_PS_HOLD_CONTROL_REG (S3C_VA_SYS0xE81C)
+#define S5PV210_PS_HOLD_CONTROL_REG (S3C_VA_SYS+0xE81C)
 static void aries_power_off(void)
 {
 	while (1) {
@@ -3946,7 +3934,7 @@ void s3c_config_sleep_gpio_table(int array_size, unsigned int (*gpio_table)[3])
 {
 	u32 i, gpio;
 
-	for (i = 0; i < array_size; i) {
+	for (i = 0; i < array_size; i++) {
 		gpio = gpio_table[i][0];
 		s3c_gpio_slp_cfgpin(gpio, gpio_table[i][1]);
 		s3c_gpio_slp_setpull_updown(gpio, gpio_table[i][2]);
@@ -4022,12 +4010,18 @@ void s3c_config_sleep_gpio(void)
 EXPORT_SYMBOL(s3c_config_sleep_gpio);
 
 static unsigned int wlan_sdio_on_table[][4] = {
-	{GPIO_WLAN_SDIO_CLK, GPIO_WLAN_SDIO_CLK_AF, GPIO_LEVEL_NONE, S3C_GPIO_PULL_NONE},
-	{GPIO_WLAN_SDIO_CMD, GPIO_WLAN_SDIO_CMD_AF, GPIO_LEVEL_NONE, S3C_GPIO_PULL_NONE},
-	{GPIO_WLAN_SDIO_D0, GPIO_WLAN_SDIO_D0_AF, GPIO_LEVEL_NONE, S3C_GPIO_PULL_NONE},
-	{GPIO_WLAN_SDIO_D1, GPIO_WLAN_SDIO_D1_AF, GPIO_LEVEL_NONE, S3C_GPIO_PULL_NONE},
-	{GPIO_WLAN_SDIO_D2, GPIO_WLAN_SDIO_D2_AF, GPIO_LEVEL_NONE, S3C_GPIO_PULL_NONE},
-	{GPIO_WLAN_SDIO_D3, GPIO_WLAN_SDIO_D3_AF, GPIO_LEVEL_NONE, S3C_GPIO_PULL_NONE},
+	{GPIO_WLAN_SDIO_CLK, GPIO_WLAN_SDIO_CLK_AF, GPIO_LEVEL_NONE,
+		S3C_GPIO_PULL_NONE},
+	{GPIO_WLAN_SDIO_CMD, GPIO_WLAN_SDIO_CMD_AF, GPIO_LEVEL_NONE,
+		S3C_GPIO_PULL_NONE},
+	{GPIO_WLAN_SDIO_D0, GPIO_WLAN_SDIO_D0_AF, GPIO_LEVEL_NONE,
+		S3C_GPIO_PULL_NONE},
+	{GPIO_WLAN_SDIO_D1, GPIO_WLAN_SDIO_D1_AF, GPIO_LEVEL_NONE,
+		S3C_GPIO_PULL_NONE},
+	{GPIO_WLAN_SDIO_D2, GPIO_WLAN_SDIO_D2_AF, GPIO_LEVEL_NONE,
+		S3C_GPIO_PULL_NONE},
+	{GPIO_WLAN_SDIO_D3, GPIO_WLAN_SDIO_D3_AF, GPIO_LEVEL_NONE,
+		S3C_GPIO_PULL_NONE},
 };
 
 static unsigned int wlan_sdio_off_table[][4] = {
@@ -4094,7 +4088,7 @@ static int wlan_carddetect_en(int onoff)
 	u32 sdio;
 
 	if (onoff) {
-		for (i = 0; i < ARRAY_SIZE(wlan_sdio_on_table); i) {
+		for (i = 0; i < ARRAY_SIZE(wlan_sdio_on_table); i++) {
 			sdio = wlan_sdio_on_table[i][0];
 			s3c_gpio_cfgpin(sdio,
 					S3C_GPIO_SFN(wlan_sdio_on_table[i][1]));
@@ -4103,7 +4097,7 @@ static int wlan_carddetect_en(int onoff)
 				gpio_set_value(sdio, wlan_sdio_on_table[i][2]);
 		}
 	} else {
-		for (i = 0; i < ARRAY_SIZE(wlan_sdio_off_table); i) {
+		for (i = 0; i < ARRAY_SIZE(wlan_sdio_off_table); i++) {
 			sdio = wlan_sdio_off_table[i][0];
 			s3c_gpio_cfgpin(sdio,
 				S3C_GPIO_SFN(wlan_sdio_off_table[i][1]));
@@ -4114,7 +4108,6 @@ static int wlan_carddetect_en(int onoff)
 	}
 	udelay(5);
 
-	/* mmc rescan */
 	sdhci_s3c_force_presence_change(&s3c_device_hsmmc1);
 	return 0;
 }
@@ -4129,10 +4122,10 @@ static struct resource wifi_resources[] = {
 };
 
 static struct wifi_mem_prealloc wifi_mem_array[PREALLOC_WLAN_SEC_NUM] = {
-	{NULL, (WLAN_SECTION_SIZE_0  PREALLOC_WLAN_SECTION_HEADER)},
-	{NULL, (WLAN_SECTION_SIZE_1  PREALLOC_WLAN_SECTION_HEADER)},
-	{NULL, (WLAN_SECTION_SIZE_2  PREALLOC_WLAN_SECTION_HEADER)},
-	{NULL, (WLAN_SECTION_SIZE_3  PREALLOC_WLAN_SECTION_HEADER)}
+	{NULL, (WLAN_SECTION_SIZE_0 + PREALLOC_WLAN_SECTION_HEADER)},
+	{NULL, (WLAN_SECTION_SIZE_1 + PREALLOC_WLAN_SECTION_HEADER)},
+	{NULL, (WLAN_SECTION_SIZE_2 + PREALLOC_WLAN_SECTION_HEADER)},
+	{NULL, (WLAN_SECTION_SIZE_3 + PREALLOC_WLAN_SECTION_HEADER)}
 };
 
 static void *aries_mem_prealloc(int section, unsigned long size)
@@ -4154,7 +4147,7 @@ int __init aries_init_wifi_mem(void)
 	int i;
 	int j;
 
-	for (i = 0 ; i < WLAN_SKB_BUF_NUM ; i) {
+	for (i = 0 ; i < WLAN_SKB_BUF_NUM ; i++) {
 		wlan_static_skb[i] = dev_alloc_skb(
 				((i < (WLAN_SKB_BUF_NUM / 2)) ? 4096 : 8192));
 
@@ -4162,7 +4155,7 @@ int __init aries_init_wifi_mem(void)
 			goto err_skb_alloc;
 	}
 
-	for (i = 0 ; i < PREALLOC_WLAN_SEC_NUM ; i) {
+	for (i = 0 ; i < PREALLOC_WLAN_SEC_NUM ; i++) {
 		wifi_mem_array[i].mem_ptr =
 				kmalloc(wifi_mem_array[i].size, GFP_KERNEL);
 
@@ -4173,14 +4166,14 @@ int __init aries_init_wifi_mem(void)
 
  err_mem_alloc:
 	pr_err("Failed to mem_alloc for WLAN\n");
-	for (j = 0 ; j < i ; j)
+	for (j = 0 ; j < i ; j++)
 		kfree(wifi_mem_array[j].mem_ptr);
 
 	i = WLAN_SKB_BUF_NUM;
 
  err_skb_alloc:
 	pr_err("Failed to skb_alloc for WLAN\n");
-	for (j = 0 ; j < i ; j)
+	for (j = 0 ; j < i ; j++)
 		dev_kfree_skb(wlan_static_skb[j]);
 
 	return -ENOMEM;
@@ -4363,10 +4356,10 @@ static void __init aries_fixup(struct machine_desc *desc,
 	mi->bank[2].node = 2;
 	mi->nr_banks = 3;
 
-	ram_console_start = mi->bank[2].start  mi->bank[2].size;
+	ram_console_start = mi->bank[2].start + mi->bank[2].size;
 	ram_console_size = SZ_1M - SZ_4K;
 
-	pm_debug_scratchpad = ram_console_start  ram_console_size;
+	pm_debug_scratchpad = ram_console_start + ram_console_size;
 }
 
 /* this function are used to detect s5pc110 chip version temporally */
@@ -4425,7 +4418,7 @@ static void __init fsa9480_gpio_init(void)
 static void __init setup_ram_console_mem(void)
 {
 	ram_console_resource[0].start = ram_console_start;
-	ram_console_resource[0].end = ram_console_start  ram_console_size - 1;
+	ram_console_resource[0].end = ram_console_start + ram_console_size - 1;
 }
 
 static void __init sound_init(void)
@@ -4447,7 +4440,16 @@ static void __init sound_init(void)
 	reg |= 0x1;
 	__raw_writel(reg, S5P_CLK_OUT);
 
+#if defined(CONFIG_SAMSUNG_VIBRANT)
+    if((HWREV == 0x0A) || (HWREV == 0x0C) || (HWREV == 0x0D) || (HWREV == 0x0E) ) //0x0A:00, 0x0C:00, 0x0D:01, 0x0E:05
+        gpio_request(GPIO_MICBIAS_EN, "micbias_enable");
+    else {
+        gpio_request(GPIO_MICBIAS_EN2, "micbias_enable2");
+        gpio_request(GPIO_MICBIAS_EN, "micbias_enable");
+    }
+#else
 	gpio_request(GPIO_MICBIAS_EN, "micbias_enable");
+#endif
 }
 
 static bool console_flushed;
@@ -4534,12 +4536,13 @@ static void __init aries_machine_init(void)
 #endif
 
 	/* headset/earjack detection */
-#if defined(CONFIG_SAMSUNG_CAPTIVATE) || defined (CONFIG_SAMSUNG_VIBRANT)
+#if defined(CONFIG_SAMSUNG_CAPTIVATE)
     gpio_request(GPIO_EAR_MICBIAS_EN, "ear_micbias_enable");
+#elif defined (CONFIG_SAMSUNG_VIBRANT) || defined(CONFIG_SAMSUNG_GALAXYS) || defined(CONFIG_SAMSUNG_GALAXYSB)
+    /* nothing */
 #else
-	//FIXME
-	//if (system_rev >= 0x09)	        
-		//gpio_request(GPIO_EAR_MICBIAS_EN, "ear_micbias_enable");
+	if (system_rev >= 0x09)
+		gpio_request(GPIO_EAR_MICBIAS_EN, "ear_micbias_enable");
 #endif
 
 	gpio_request(GPIO_TOUCH_EN, "touch en");
@@ -4565,11 +4568,9 @@ static void __init aries_machine_init(void)
 	/* max8998 */
 	i2c_register_board_info(6, i2c_devs6, ARRAY_SIZE(i2c_devs6));
 
-
 	/* cypress touchkey */
 	touch_keypad_gpio_init();
 	i2c_register_board_info(10, i2c_devs10, ARRAY_SIZE(i2c_devs10));
-
 
 	/* FSA9480 */
 	fsa9480_gpio_init();
@@ -4603,7 +4604,6 @@ static void __init aries_machine_init(void)
 #endif
 
 	s5ka3dfx_request_gpio();
-
 	ce147_init();
 
 #ifdef CONFIG_VIDEO_FIMC
@@ -4740,7 +4740,7 @@ MACHINE_START(SMDKC110, "SMDKC110")
 	/* Maintainer: Kukjin Kim <kgene.kim@samsung.com> */
 	.phys_io	= S3C_PA_UART & 0xfff00000,
 	.io_pg_offst	= (((u32)S3C_VA_UART) >> 18) & 0xfffc,
-	.boot_params	= S5P_PA_SDRAM  0x100,
+	.boot_params	= S5P_PA_SDRAM + 0x100,
 	.fixup		= aries_fixup,
 	.init_irq	= s5pv210_init_irq,
 	.map_io		= aries_map_io,
@@ -4755,7 +4755,7 @@ MACHINE_END
 MACHINE_START(ARIES, "aries")
 	.phys_io	= S3C_PA_UART & 0xfff00000,
 	.io_pg_offst	= (((u32)S3C_VA_UART) >> 18) & 0xfffc,
-	.boot_params	= S5P_PA_SDRAM  0x100,
+	.boot_params	= S5P_PA_SDRAM + 0x100,
 	.fixup		= aries_fixup,
 	.init_irq	= s5pv210_init_irq,
 	.map_io		= aries_map_io,

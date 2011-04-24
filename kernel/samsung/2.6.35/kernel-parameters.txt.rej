@@ -1,0 +1,11 @@
+--- kernel-parameters.txt	2010-11-17 00:33:14.461761002 +0100
++++ kernel-parameters.txt	2010-10-20 22:30:22.000000000 +0200
+@@ -1610,8 +1610,6 @@
+ 	noapic		[SMP,APIC] Tells the kernel to not make use of any
+ 			IOAPICs that may be present in the system.
+ 
+-	noautogroup	Disable scheduler automatic task group creation.
+-
+ 	nobats		[PPC] Do not use BATs for mapping kernel lowmem
+ 			on "Classic" PPC cores.
+ 

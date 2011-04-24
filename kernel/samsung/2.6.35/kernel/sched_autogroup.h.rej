@@ -1,0 +1,21 @@
+--- kernel/sched_autogroup.h	1970-01-01 01:00:00.000000000 +0100
++++ kernel/sched_autogroup.h	2010-11-17 00:33:14.457761002 +0100
+@@ -0,0 +1,18 @@
++#ifdef CONFIG_SCHED_AUTOGROUP
++
++static void __sched_move_task(struct task_struct *tsk, struct rq *rq);
++
++static inline struct task_group *
++autogroup_task_group(struct task_struct *p, struct task_group *tg);
++
++#else /* !CONFIG_SCHED_AUTOGROUP */
++
++static inline void autogroup_init(struct task_struct *init_task) {  }
++
++static inline struct task_group *
++autogroup_task_group(struct task_struct *p, struct task_group *tg)
++{
++	return tg;
++}
++
++#endif /* CONFIG_SCHED_AUTOGROUP */

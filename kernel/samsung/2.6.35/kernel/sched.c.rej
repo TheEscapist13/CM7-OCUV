@@ -1,0 +1,10 @@
+--- kernel/sched.c	2010-10-20 22:30:22.000000000 +0200
++++ kernel/sched.c	2010-11-17 00:33:51.633761002 +0100
+@@ -78,6 +78,7 @@
+ 
+ #include "sched_cpupri.h"
+ #include "workqueue_sched.h"
++#include "sched_autogroup.h"
+ 
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/sched.h>

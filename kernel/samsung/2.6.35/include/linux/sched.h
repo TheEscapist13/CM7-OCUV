@@ -513,15 +513,10 @@ struct thread_group_cputimer {
 	spinlock_t lock;
 };
 
-struct autogroup;
 
-struct autogroup;
-
-struct autogroup;
-
-struct autogroup;
-
-struct autogroup;
+#ifdef CONFIG_SCHED_AUTOGROUP
+	struct autogroup *autogroup;
+#endif
 
 /*
  * NOTE! "signal_struct" does not have it's own
@@ -565,9 +560,7 @@ struct signal_struct {
 	struct pid *leader_pid;
 	ktime_t it_real_incr;
 
-#ifdef CONFIG_SCHED_AUTOGROUP
-	struct autogroup *autogroup;
-#endif
+
 	/*
 	 * ITIMER_PROF and ITIMER_VIRTUAL timers for the process, we use
 	 * CPUCLOCK_PROF and CPUCLOCK_VIRT for indexing array as these
@@ -575,9 +568,6 @@ struct signal_struct {
 	 */
 	struct cpu_itimer it[2];
 
-#ifdef CONFIG_SCHED_AUTOGROUP
-	struct autogroup *autogroup;
-#endif
 	/*
 	 * Thread group totals for process CPU timers.
 	 * See thread_group_cputimer(), et al, for details.
@@ -596,9 +586,7 @@ struct signal_struct {
 
 	struct tty_struct *tty; /* NULL if no tty */
 
-#ifdef CONFIG_SCHED_AUTOGROUP
-	struct autogroup *autogroup;
-#endif
+
 	/*
 	 * Cumulative resource counters for dead threads in the group,
 	 * and for reaped dead child processes forked by this group.
@@ -617,9 +605,6 @@ struct signal_struct {
 	unsigned long maxrss, cmaxrss;
 	struct task_io_accounting ioac;
 
-#ifdef CONFIG_SCHED_AUTOGROUP
-	struct autogroup *autogroup;
-#endif
 	/*
 	 * Cumulative ns of schedule CPU time fo dead threads in the
 	 * group, not including a zombie group leader, (This only differs
@@ -628,9 +613,7 @@ struct signal_struct {
 	 */
 	unsigned long long sum_sched_runtime;
 
-#ifdef CONFIG_SCHED_AUTOGROUP
-	struct autogroup *autogroup;
-#endif
+
 	/*
 	 * We don't bother to synchronize most readers of this at all,
 	 * because there is no reader checking a limit that actually needs

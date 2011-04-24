@@ -101,7 +101,7 @@ static int bcmsdh_sdmmc_probe(struct sdio_func *func,
 		if(func->device == 0x4) { /* 4318 */
 			gInstance->func[2] = NULL;
 			sd_trace(("NIC found, calling bcmsdh_probe...\n"));
-			ret = bcmsdh_probe(func->dev);
+			ret = bcmsdh_probe(&func->dev);
 		}
 	}
 
@@ -109,7 +109,7 @@ static int bcmsdh_sdmmc_probe(struct sdio_func *func,
 
 	if (func->num == 2) {
 		sd_trace(("F2 found, calling bcmsdh_probe...\n"));
-		ret = bcmsdh_probe(func->dev);
+		ret = bcmsdh_probe(&func->dev);
 	}
 
 	return ret;
@@ -125,7 +125,7 @@ static void bcmsdh_sdmmc_remove(struct sdio_func *func)
 
 	if (func->num == 2) {
 		sd_trace(("F2 found, calling bcmsdh_remove...\n"));
-		bcmsdh_remove(func->dev);
+		bcmsdh_remove(&func->dev);
 	}
 }
 
@@ -251,7 +251,6 @@ int sdio_function_init(void)
 
 	error = sdio_register_driver(&bcmsdh_sdmmc_driver);
 
-
 	return error;
 }
 
@@ -262,7 +261,6 @@ extern int bcmsdh_remove(struct device *dev);
 void sdio_function_cleanup(void)
 {
 	sd_trace(("%s Enter\n", __FUNCTION__));
-
 
 	sdio_unregister_driver(&bcmsdh_sdmmc_driver);
 

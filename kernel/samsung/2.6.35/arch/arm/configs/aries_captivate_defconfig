@@ -89,15 +89,15 @@ CONFIG_BLK_DEV_INITRD=y
 CONFIG_INITRAMFS_SOURCE="out/target/product/captivate/recovery.cpio"
 CONFIG_INITRAMFS_ROOT_UID="squash"
 CONFIG_INITRAMFS_ROOT_GID="squash"
-CONFIG_RD_GZIP=y
+# CONFIG_RD_GZIP is not set
 # CONFIG_RD_BZIP2 is not set
 # CONFIG_RD_LZMA is not set
-# CONFIG_RD_LZO is not set
+CONFIG_RD_LZO=y
 # CONFIG_INITRAMFS_COMPRESSION_NONE is not set
-CONFIG_INITRAMFS_COMPRESSION_GZIP=y
+# CONFIG_INITRAMFS_COMPRESSION_GZIP=y
 # CONFIG_INITRAMFS_COMPRESSION_BZIP2 is not set
 # CONFIG_INITRAMFS_COMPRESSION_LZMA is not set
-# CONFIG_INITRAMFS_COMPRESSION_LZO is not set
+CONFIG_INITRAMFS_COMPRESSION_LZO=y
 CONFIG_CC_OPTIMIZE_FOR_SIZE=y
 CONFIG_CUSTOM_CFLAGS="-pipe -fno-delete-null-pointer-checks -march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp -fno-gcse -fgcse-las -fgcse-sm -fgcse-las -ftree-loop-linear -ftree-loop-im -ftree-loop-ivcanon -fivopts -funroll-loops -fbtr-bb-exclusive -fremove-local-statics --param l2-cache-size=512 --param l1-cache-size=64 --param simultaneous-prefetches=6 --param prefetch-latency=400 --param l1-cache-line-size=64 -mvectorize-with-neon-quad -fselective-scheduling -fsel-sched-pipelining -fsel-sched-pipelining-outer-loops -fvect-cost-model -DNDEBUG -fstack-protector"	
 CONFIG_CUSTOM_MAKEFLAGS=""

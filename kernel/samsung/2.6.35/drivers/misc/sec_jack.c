@@ -31,6 +31,9 @@
 #include <linux/gpio_event.h>
 #include <linux/sec_jack.h>
 
+#undef pr_debug
+#define pr_debug pr_info
+
 #define MAX_ZONE_LIMIT		10
 #define SEND_KEY_CHECK_TIME_MS	30		/* 30ms */
 #define DET_CHECK_TIME_MS	200		/* 200ms */
@@ -105,9 +108,11 @@ static bool sec_jack_buttons_filter(struct input_handle *handle,
 {
 	struct sec_jack_info *hi = handle->handler->private;
 
+    pr_debug("%s: type=%d, code=%d, value=%d\n", __func__, type, code, value);
 	if (type != EV_KEY || code != KEY_UNKNOWN)
 		return false;
 
+    pr_debug("%s: queueing type=%d, code=%d, value=%d\n", __func__, type, code, value);
 	hi->pressed = value;
 
 	/* This is called in timer handler of gpio_input driver.
@@ -132,6 +137,7 @@ static int sec_jack_buttons_connect(struct input_handler *handler,
 	if (dev->name != sec_jack_input_data.name)
 		return -ENODEV;
 
+    pr_debug("%s\n", __func__);
 	hi = handler->private;
 	pdata = hi->pdata;
 	btn_zones = pdata->buttons_zones;
@@ -170,6 +176,7 @@ static int sec_jack_buttons_connect(struct input_handler *handler,
 
 static void sec_jack_buttons_disconnect(struct input_handle *handle)
 {
+    pr_debug("%s\n", __func__);
 	input_close_device(handle);
 	input_unregister_handle(handle);
 }
@@ -215,6 +222,7 @@ static void sec_jack_set_type(struct sec_jack_info *hi, int jack_type)
 
 static void handle_jack_not_inserted(struct sec_jack_info *hi)
 {
+    pr_debug("%s\n", __func__);
 	sec_jack_set_type(hi, SEC_JACK_NO_DEVICE);
 	hi->pdata->set_micbias_state(false);
 }
@@ -228,6 +236,7 @@ static void determine_jack_type(struct sec_jack_info *hi)
 	int i;
 	unsigned npolarity = !hi->pdata->det_active_high;
 
+    pr_debug("%s\n", __func__);
 	while (gpio_get_value(hi->pdata->det_gpio) ^ npolarity) {
 		adc = hi->pdata->get_adc_value();
 		pr_debug("%s: adc = %d\n", __func__, adc);
@@ -266,6 +275,8 @@ static irqreturn_t sec_jack_detect_irq_thread(int irq, void *dev_id)
 	struct sec_jack_platform_data *pdata = hi->pdata;
 	int time_left_ms = DET_CHECK_TIME_MS;
 	unsigned npolarity = !hi->pdata->det_active_high;
+
+    pr_debug("%s", __func__);
 
 	/* set mic bias to enable adc */
 	pdata->set_micbias_state(true);
@@ -308,7 +319,7 @@ void sec_jack_buttons_work(struct work_struct *work)
 
 	/* when button is pressed */
 	adc = pdata->get_adc_value();
-
+    pr_debug("%s: adc=%d\n", __func__, adc);
 	for (i = 0; i < pdata->num_buttons_zones; i++)
 		if (adc >= btn_zones[i].adc_low &&
 		    adc <= btn_zones[i].adc_high) {
@@ -425,8 +436,10 @@ static int sec_jack_probe(struct platform_device *pdev)
 
 	dev_set_drvdata(&pdev->dev, hi);
 
-#if defined (CONFIG_MACH_ARIES)
+#if defined (CONFIG_SAMSUNG_CAPTIVATE) || defined(CONFIG_SAMSUNG_VIBRANT)
 	pdata->det_active_high = 1;
+#else
+	pdata->det_active_high = 0;
 #endif
 
 	return 0;

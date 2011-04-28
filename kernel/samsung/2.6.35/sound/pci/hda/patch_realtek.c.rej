@@ -1,0 +1,20 @@
+*** sound/pci/hda/patch_realtek.c	2011-04-25 01:38:03.000000000 -0400
+--- sound/pci/hda/patch_realtek.c	2011-03-31 14:58:56.000000000 -0400
+***************
+*** 18821,18826 ****
+  {
+  	if ((alc_read_coef_idx(codec, 0) & 0x00f0)==0x0030){
+  		kfree(codec->chip_name);
+  			codec->chip_name = kstrdup("ALC888-VD", GFP_KERNEL);
+  		if (!codec->chip_name) {
+  			alc_free(codec);
+--- 18858,18866 ----
+  {
+  	if ((alc_read_coef_idx(codec, 0) & 0x00f0)==0x0030){
+  		kfree(codec->chip_name);
++ 		if (codec->vendor_id == 0x10ec0887)
++ 			codec->chip_name = kstrdup("ALC887-VD", GFP_KERNEL);
++ 		else
+  			codec->chip_name = kstrdup("ALC888-VD", GFP_KERNEL);
+  		if (!codec->chip_name) {
+  			alc_free(codec);

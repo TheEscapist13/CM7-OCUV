@@ -46,8 +46,8 @@ CONFIG_HAVE_KERNEL_LZMA=y
 CONFIG_HAVE_KERNEL_LZO=y
 # CONFIG_KERNEL_GZIP is not set
 # CONFIG_KERNEL_BZIP2 is not set
-CONFIG_KERNEL_LZMA=y
-# CONFIG_KERNEL_LZO is not set
+# CONFIG_KERNEL_LZMA ois not set
+CONFIG_KERNEL_LZO=y
 # CONFIG_SWAP is not set
 CONFIG_SYSVIPC=y
 CONFIG_SYSVIPC_SYSCTL=y
@@ -99,7 +99,7 @@ CONFIG_RD_LZO=y
 # CONFIG_INITRAMFS_COMPRESSION_LZMA is not set
 CONFIG_INITRAMFS_COMPRESSION_LZO=y
 CONFIG_CC_OPTIMIZE_FOR_SIZE=y
-CONFIG_CUSTOM_CFLAGS="-pipe -fno-delete-null-pointer-checks -march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp -fno-gcse -fgcse-las -fgcse-sm -fgcse-las -ftree-loop-linear -ftree-loop-im -ftree-loop-ivcanon -fivopts -funroll-loops -fbtr-bb-exclusive -fremove-local-statics --param l2-cache-size=512 --param l1-cache-size=64 --param simultaneous-prefetches=6 --param prefetch-latency=400 --param l1-cache-line-size=64 -mvectorize-with-neon-quad -fselective-scheduling -fsel-sched-pipelining -fsel-sched-pipelining-outer-loops -fvect-cost-model -DNDEBUG -fstack-protector"	
+CONFIG_CUSTOM_CFLAGS="-pipe -fno-delete-null-pointer-checks -march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp -fno-gcse -fgcse-las -fgcse-sm -fgcse-las -ftree-loop-linear -ftree-loop-im -ftree-loop-ivcanon -fivopts -funroll-loops -fbtr-bb-exclusive -fremove-local-statics --param l2-cache-size=512 --param l1-cache-size=64 --param simultaneous-prefetches=6 --param prefetch-latency=400 --param l1-cache-line-size=64 -mvectorize-with-neon-quad -fselective-scheduling -fsel-sched-pipelining -fsel-sched-pipelining-outer-loops -fvect-cost-model -DNDEBUG -fstack-protector -O3"	
 CONFIG_CUSTOM_MAKEFLAGS=""
 CONFIG_SYSCTL=y
 CONFIG_ANON_INODES=y
@@ -402,7 +402,7 @@ CONFIG_PAGE_OFFSET=0xC0000000
 # CONFIG_PREEMPT_NONE is not set
 # CONFIG_PREEMPT_VOLUNTARY is not set
 CONFIG_PREEMPT=y
-CONFIG_HZ=100
+CONFIG_HZ=1000
 # CONFIG_THUMB2_KERNEL is not set
 CONFIG_AEABI=y
 CONFIG_OABI_COMPAT=y
@@ -1154,7 +1154,7 @@ CONFIG_INPUT_MISC=y
 CONFIG_INPUT_BMA023=y
 CONFIG_INPUT_YAS529=y
 CONFIG_INPUT_YAS529_POSITION=0
-ONFIG_INPUT_ORIENTATION=y
+CONFIG_INPUT_ORIENTATION=y
 # CONFIG_INPUT_ATI_REMOTE is not set
 # CONFIG_INPUT_ATI_REMOTE2 is not set
 CONFIG_INPUT_KEYCHORD=y

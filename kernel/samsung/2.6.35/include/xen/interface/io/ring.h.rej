@@ -1,0 +1,24 @@
+*** include/xen/interface/io/ring.h	2011-04-25 01:38:01.000000000 -0400
+--- include/xen/interface/io/ring.h	2011-03-31 14:58:56.000000000 -0400
+***************
+*** 24,29 ****
+   * A ring contains as many entries as will fit, rounded down to the nearest
+   * power of two (so we can mask with (size-1) to loop around).
+   */
+  #define __RING_SIZE(_s, _sz)						\
+  	(__RD32(((_sz) - (long)&(_s)->ring + (long)(_s)) / sizeof((_s)->ring[0])))
+  
+--- 24,36 ----
+   * A ring contains as many entries as will fit, rounded down to the nearest
+   * power of two (so we can mask with (size-1) to loop around).
+   */
++ #define __CONST_RING_SIZE(_s, _sz)				\
++ 	(__RD32(((_sz) - offsetof(struct _s##_sring, ring)) /	\
++ 		sizeof(((struct _s##_sring *)0)->ring[0])))
++ 
++ /*
++  * The same for passing in an actual pointer instead of a name tag.
++  */
+  #define __RING_SIZE(_s, _sz)						\
+  	(__RD32(((_sz) - (long)&(_s)->ring + (long)(_s)) / sizeof((_s)->ring[0])))
+  

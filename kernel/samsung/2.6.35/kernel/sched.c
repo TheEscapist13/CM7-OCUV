@@ -79,6 +79,7 @@
 
 #include "sched_cpupri.h"
 #include "sched_autogroup.h"
+#include "sched_autogroup.c"
  
 
 #define CREATE_TRACE_POINTS

@@ -1,0 +1,64 @@
+*** kernel/sched_fair.c	2011-04-25 01:38:02.000000000 -0400
+--- kernel/sched_fair.c	2011-03-31 14:58:56.000000000 -0400
+***************
+*** 2746,2754 ****
+  	if (sds.this_load >= sds.avg_load)
+  		goto out_balanced;
+  
+  		if (100 * sds.max_load <= sd->imbalance_pct * sds.this_load)
+  			goto out_balanced;
+  
+  	/* Looks like there is an imbalance. Compute it */
+  	calculate_imbalance(&sds, this_cpu, imbalance);
+  	return sds.busiest;
+--- 2785,2812 ----
+  	if (sds.this_load >= sds.avg_load)
+  		goto out_balanced;
+  
++ 	/*
++ 	 * In the CPU_NEWLY_IDLE, use imbalance_pct to be conservative.
++ 	 * And to check for busy balance use !idle_cpu instead of
++ 	 * CPU_NOT_IDLE. This is because HT siblings will use CPU_NOT_IDLE
++ 	 * even when they are idle.
++ 	 */
++ 	if (idle == CPU_NEWLY_IDLE || !idle_cpu(this_cpu)) {
+  		if (100 * sds.max_load <= sd->imbalance_pct * sds.this_load)
+  			goto out_balanced;
++ 	} else {
++ 		/*
++ 		 * This cpu is idle. If the busiest group load doesn't
++ 		 * have more tasks than the number of available cpu's and
++ 		 * there is no imbalance between this and busiest group
++ 		 * wrt to idle cpu's, it is balanced.
++ 		 */
++ 		if ((sds.this_idle_cpus  <= sds.busiest_idle_cpus + 1) &&
++ 		    sds.busiest_nr_running <= sds.busiest_group_weight)
++ 			goto out_balanced;
++ 	}
+  
++ force_balance:
+  	/* Looks like there is an imbalance. Compute it */
+  	calculate_imbalance(&sds, this_cpu, imbalance);
+  	return sds.busiest;
+***************
+*** 2939,2944 ****
+  
+  	if (!ld_moved) {
+  		schedstat_inc(sd, lb_failed[idle]);
+  			sd->nr_balance_failed++;
+  
+  		if (need_active_balance(sd, sd_idle, idle)) {
+--- 2997,3009 ----
+  
+  	if (!ld_moved) {
+  		schedstat_inc(sd, lb_failed[idle]);
++ 		/*
++ 		 * Increment the failure counter only on periodic balance.
++ 		 * We do not want newidle balance, which can be very
++ 		 * frequent, pollute the failure counter causing
++ 		 * excessive cache_hot migrations and active balances.
++ 		 */
++ 		if (idle != CPU_NEWLY_IDLE)
+  			sd->nr_balance_failed++;
+  
+  		if (need_active_balance(sd, sd_idle, idle)) {

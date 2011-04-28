@@ -1,0 +1,21 @@
+*** arch/x86/kernel/olpc.c	2011-04-25 01:37:57.000000000 -0400
+--- arch/x86/kernel/olpc.c	2011-03-31 14:58:56.000000000 -0400
+***************
+*** 174,180 ****
+  			if (wait_on_obf(0x6c, 1)) {
+  				printk(KERN_ERR "olpc-ec:  timeout waiting for"
+  						" EC to provide data!\n");
+  					goto restart;
+  			}
+  			outbuf[i] = inb(0x68);
+  			printk(KERN_DEBUG "olpc-ec:  received 0x%x\n",
+--- 175,183 ----
+  			if (wait_on_obf(0x6c, 1)) {
+  				printk(KERN_ERR "olpc-ec:  timeout waiting for"
+  						" EC to provide data!\n");
++ 				if (restarts++ < 10)
+  					goto restart;
++ 				goto err;
+  			}
+  			outbuf[i] = inb(0x68);
+  			printk(KERN_DEBUG "olpc-ec:  received 0x%x\n",

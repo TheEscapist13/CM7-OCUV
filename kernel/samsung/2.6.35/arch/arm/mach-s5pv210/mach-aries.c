@@ -2082,7 +2082,7 @@ static struct i2c_board_info i2c_devs10[] __initdata = {
 
 static struct i2c_board_info i2c_devs5[] __initdata = {
 	{
-		I2C_BOARD_INFO("smb380", (0x38)),
+		I2C_BOARD_INFO("bma023", (0x38)),
 	},
 };
 

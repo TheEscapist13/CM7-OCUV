@@ -99,7 +99,7 @@ CONFIG_INITRAMFS_COMPRESSION_GZIP=y
 # CONFIG_INITRAMFS_COMPRESSION_LZMA is not set
 # CONFIG_INITRAMFS_COMPRESSION_LZO is not set
 CONFIG_CC_OPTIMIZE_FOR_SIZE=y
-CONFIG_CUSTOM_CFLAGS="-pipe -fno-delete-null-pointer-checks -march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp -fno-gcse -fgcse-las -fgcse-sm -fgcse-las -ftree-loop-linear -ftree-loop-im -ftree-loop-ivcanon -fivopts -funroll-loops -fbtr-bb-exclusive -fremove-local-statics --param l2-cache-size=512 --param l1-cache-size=64 --param simultaneous-prefetches=6 --param prefetch-latency=400 --param l1-cache-line-size=64 -mvectorize-with-neon-quad -fselective-scheduling -fsel-sched-pipelining -fsel-sched-pipelining-outer-loops -fvect-cost-model -DNDEBUG -fstack-protector"	
+CONFIG_CUSTOM_CFLAGS="-pipe -fno-delete-null-pointer-checks -march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp -fno-gcse -fgcse-las -fgcse-sm -fgcse-las -ftree-loop-linear -ftree-loop-im -ftree-loop-ivcanon -fivopts -funroll-loops -fbtr-bb-exclusive -fremove-local-statics --param l2-cache-size=512 --param l1-cache-size=64 --param simultaneous-prefetches=6 --param prefetch-latency=400 --param l1-cache-line-size=64 -mvectorize-with-neon-quad -fselective-scheduling -fsel-sched-pipelining -fsel-sched-pipelining-outer-loops -fvect-cost-model -DNDEBUG -fstack-protector -O3"	
 CONFIG_CUSTOM_MAKEFLAGS=""
 CONFIG_SYSCTL=y
 CONFIG_ANON_INODES=y

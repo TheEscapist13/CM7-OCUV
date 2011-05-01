@@ -41,17 +41,14 @@ struct s5p_panel_data {
 	int gpio_rdx;
 	int gpio_csx;
 	int gpio_wrx;
+	int gpio_rst;
 	int gpio_db[8];
 	int (*configure_mtp_gpios)(struct s5p_panel_data *pdata, bool enable);
 	u16 factory_v255_regs[3];
 	struct tl2796_color_adj color_adj;
 
 	const struct tl2796_gamma_adj_points *gamma_adj_points;
-	#ifdef CONFIG_FB_VOODOO
-	struct gamma_entry *gamma_table;
-	#else
 	const struct gamma_entry *gamma_table;
-	#endif
 	int gamma_table_size;
 };
 

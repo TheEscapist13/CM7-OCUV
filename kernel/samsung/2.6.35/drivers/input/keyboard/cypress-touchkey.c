@@ -235,10 +235,11 @@ static void cypress_touchkey_early_suspend(struct early_suspend *h)
 	 * Disallow powering off the touchkey controller on ongoing led notification
 	 */
 
-	if(!BacklightNotification_ongoing)
+	if(!BacklightNotification_ongoing) {
 #endif
 		devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
 		all_keys_up(devdata);
+	}
 	
 }
 
@@ -248,6 +249,7 @@ static void cypress_touchkey_early_resume(struct early_suspend *h)
 		container_of(h, struct cypress_touchkey_devdata, early_suspend);
 
 	devdata->pdata->touchkey_onoff(TOUCHKEY_ON);
+	printk("cypress: turning backlight on after early_resume\n");
 	if (i2c_touchkey_write_byte(devdata, devdata->backlight_on)) {
 		devdata->is_dead = true;
 		devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);

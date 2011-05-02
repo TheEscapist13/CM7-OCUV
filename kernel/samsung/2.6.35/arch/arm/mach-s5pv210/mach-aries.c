@@ -1161,7 +1161,7 @@ static struct i2c_gpio_platform_data  i2c13_platdata = {
 };
 
 static struct platform_device s3c_device_i2c13 = {
-	.name        = "i2c-gpio"
+	.name        = "i2c-gpio",
 	.id          = 13,
  	.dev.platform_data  = &i2c13_platdata,
 };

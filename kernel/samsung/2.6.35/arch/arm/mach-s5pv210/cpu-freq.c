@@ -860,6 +860,8 @@ static int s5pv210_cpufreq_notifier_event(struct notifier_block *this,
 {
 	static int max, min;
 	int ret;
+	
+	struct cpufreq_policy *policy = cpufreq_cpu_get(0);
 
 	switch (event) {
 	case PM_SUSPEND_PREPARE:

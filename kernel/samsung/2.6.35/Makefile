@@ -352,8 +352,8 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
-		   -fno-delete-null-pointer-checks \
-		   -O3
+		   -fno-delete-null-pointer-checks 
+
 KBUILD_AFLAGS   := -D__ASSEMBLY__
 
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
@@ -529,11 +529,11 @@ endif # $(dot-config)
 # Defaults vmlinux but it is usually overridden in the arch makefile
 all: vmlinux
 
-#ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
-#KBUILD_CFLAGS	+= -Os
-#else
-#KBUILD_CFLAGS	+= -O2
-#endif
+ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
+KBUILD_CFLAGS	+= -Os
+else
+KBUILD_CFLAGS	+= -O2
+endif
 
 include $(srctree)/arch/$(SRCARCH)/Makefile
 

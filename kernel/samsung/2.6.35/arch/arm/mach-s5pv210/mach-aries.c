@@ -285,7 +285,7 @@ static struct s3cfb_lcd s6e63m0 = {
 	.p_width = 52,
 	.p_height = 86,
 	.bpp = 24,
-	.freq = 72,
+	.freq = 60,
 
 	.timing = {
 		.h_fp = 16,
@@ -1151,20 +1151,19 @@ static struct platform_device s3c_device_i2c12 = {
 };
 
 #if defined (CONFIG_SAMSUNG_CAPTIVATE)
-static struct i2c_gpio_platform_data  i2c13_platdata = {
-    .sda_pin    = GPIO_A1026_SDA,
-    .scl_pin    = GPIO_A1026_SCL,
-    .udelay      = 1,  /* 250KHz */    
-    .sda_is_open_drain  = 0,
-    .scl_is_open_drain  = 0,
-    .scl_is_output_only  = 0,
-};
-
+static struct i2c_gpio_platform_data	i2c13_platdata = {
+    .sda_pin		= GPIO_A1026_SDA,
+    .scl_pin		= GPIO_A1026_SCL,
+    .udelay			= 1,	/* 250KHz */
+    .sda_is_open_drain	= 0,
+    .scl_is_open_drain	= 0,
+    .scl_is_output_only	= 0,
+  };
 static struct platform_device s3c_device_i2c13 = {
-	.name        = "i2c-gpio",
-	.id          = 13,
- 	.dev.platform_data  = &i2c13_platdata,
-};
+  	.name				= "i2c-gpio",
+  	.id					= 13,
+  	.dev.platform_data	= &i2c13_platdata,
+  };
 #endif
 
 static void touch_keypad_gpio_init(void)
@@ -1183,27 +1182,15 @@ static void touch_keypad_onoff(int onoff)
 	if (onoff == TOUCHKEY_OFF)
 		msleep(30);
 	else
-		msleep(50);
+		msleep(25);
 }
 
-static void touch_keypad_gpio_onoff(int onoff){
-	if(onoff == TOUCHKEY_ON){
-		/*
-		* reconfigure gpio to activate touchkey controller vdd in sleep mode
-		*/
+static void touch_keypad_gpio_sleep(int onoff) {
+	if (onoff == TOUCHKEY_ON)
 		s3c_gpio_slp_cfgpin(_3_GPIO_TOUCH_EN, S3C_GPIO_SLP_OUT1);
-		s3c_gpio_slp_setpull_updown(_3_GPIO_TOUCH_EN, S3C_GPIO_PULL_NONE);
-	} else {
-		/*
- 		* reconfigure gpio to deactivate touchkey vdd in sleep mode,
-		* this is the default
-		*/
+	else
 		s3c_gpio_slp_cfgpin(_3_GPIO_TOUCH_EN, S3C_GPIO_SLP_OUT0);
-		s3c_gpio_slp_setpull_updown(_3_GPIO_TOUCH_EN, S3C_GPIO_PULL_NONE);
-	}
 }
-
-
 
 static const int touch_keypad_code[] = {
 #if defined (CONFIG_SAMSUNG_GALAXYS) || defined (CONFIG_SAMSUNG_GALAXYSB)
@@ -1223,7 +1210,7 @@ static struct touchkey_platform_data touchkey_data = {
 	.keycode_cnt = ARRAY_SIZE(touch_keypad_code),
 	.keycode = touch_keypad_code,
 	.touchkey_onoff = touch_keypad_onoff,
-	.touchkey_sleep_onoff = touch_keypad_gpio_onoff,
+	.touchkey_sleep_onoff = touch_keypad_gpio_sleep,
 	.fw_name = "cypress-touchkey.bin",
 	.scl_pin = _3_TOUCH_SCL_28V,
 	.sda_pin = _3_TOUCH_SDA_28V,
@@ -1374,6 +1361,7 @@ static struct wm8994_platform_data wm8994_pdata = {
 
 /* External camera module setting */
 static DEFINE_MUTEX(s5ka3dfx_lock);
+static struct regulator *s5ka3dfx_vga_avdd;
 static struct regulator *s5ka3dfx_vga_vddio;
 static struct regulator *s5ka3dfx_cam_isp_host;
 static struct regulator *s5ka3dfx_vga_dvdd;
@@ -1397,12 +1385,28 @@ static int s5ka3dfx_request_gpio(void)
 		gpio_free(GPIO_CAM_VGA_nSTBY);
 		return -EINVAL;
 	}
+	/* CAM_IO_EN - GPB(7) */
+	err = gpio_request(GPIO_GPB7, "GPB7");
+
+	if(err) {
+		pr_err("Failed to request GPB2 for camera control\n");
+		gpio_free(GPIO_CAM_VGA_nSTBY);
+		gpio_free(GPIO_CAM_VGA_nRST);
+		return -EINVAL;
+	}
 
 	return 0;
 }
 
 static int s5ka3dfx_power_init(void)
 {
+	/*if (IS_ERR_OR_NULL(s5ka3dfx_vga_avdd))
+		s5ka3dfx_vga_avdd = regulator_get(NULL, "vga_avdd");
+
+	if (IS_ERR_OR_NULL(s5ka3dfx_vga_avdd)) {
+		pr_err("Failed to get regulator vga_avdd\n");
+		return -EINVAL;
+	}*/
 
 	if (IS_ERR_OR_NULL(s5ka3dfx_vga_vddio))
 		s5ka3dfx_vga_vddio = regulator_get(NULL, "vga_vddio");
@@ -1441,15 +1445,14 @@ static int s5ka3dfx_power_on(void)
 		return -EINVAL;
 	}
 
-	/* CAM_IO_EN - GPB(7) */
-	err = gpio_request(GPIO_GPB7, "GPB7");
-
-	if(err) {
-		printk(KERN_ERR "failed to request GPB7 for camera control\n");
-
-		return err;
+	s5ka3dfx_request_gpio();
+	/* Turn VGA_AVDD_2.8V on */
+	/*err = regulator_enable(s5ka3dfx_vga_avdd);
+	if (err) {
+		pr_err("Failed to enable regulator vga_avdd\n");
+		return -EINVAL;
 	}
-
+	msleep(3);*/
 	// Turn CAM_ISP_SYS_2.8V on
 	gpio_direction_output(GPIO_GPB7, 0);
 	gpio_set_value(GPIO_GPB7, 1);
@@ -1460,7 +1463,7 @@ static int s5ka3dfx_power_on(void)
 	err = regulator_enable(s5ka3dfx_vga_vddio);
 	if (err) {
 		pr_err("Failed to enable regulator vga_vddio\n");
-		goto off_vga_vddio;
+		return -EINVAL;//goto off_vga_vddio;
 	}
 	udelay(20);
 
@@ -1479,7 +1482,7 @@ static int s5ka3dfx_power_on(void)
 	udelay(10);
 
 	/* Mclk enable */
-	s3c_gpio_cfgpin(GPIO_CAM_MCLK, S5PV210_GPE1_3_CAM_A_CLKOUT);
+	s3c_gpio_cfgpin(GPIO_CAM_MCLK, S3C_GPIO_SFN(0x02));
 	udelay(430);
 
 	/* Turn CAM_ISP_HOST_2.8V on */
@@ -1494,8 +1497,6 @@ static int s5ka3dfx_power_on(void)
 	gpio_direction_output(GPIO_CAM_VGA_nRST, 0);
 	gpio_set_value(GPIO_CAM_VGA_nRST, 1);
 	mdelay(5);
-
-	gpio_free(GPIO_GPB7);
 
 	return 0;
 off_cam_isp_host:
@@ -1515,7 +1516,12 @@ off_vga_dvdd:
 		pr_err("Failed to disable regulator vga_vddio\n");
 		result = err;
 	}
-off_vga_vddio:
+/*off_vga_vddio:
+	err = regulator_disable(s5ka3dfx_vga_avdd);
+	if (err) {
+		pr_err("Failed to disable regulator vga_avdd\n");
+		result = err;
+	}*/
 
 	return result;
 }
@@ -1524,7 +1530,7 @@ static int s5ka3dfx_power_off(void)
 {
 	int err;
 
-	if ( !s5ka3dfx_vga_vddio ||
+	if (/*!s5ka3dfx_vga_avdd ||*/ !s5ka3dfx_vga_vddio ||
 		!s5ka3dfx_cam_isp_host || !s5ka3dfx_vga_dvdd) {
 		pr_err("Faild to get all regulator\n");
 		return -EINVAL;
@@ -1547,15 +1553,6 @@ static int s5ka3dfx_power_off(void)
 
 	udelay(1);
 
-	/* CAM_IO_EN - GPB(7) */
-	err = gpio_request(GPIO_GPB7, "GPB7");
-
-	if(err) {
-		printk(KERN_ERR "failed to request GPB7 for camera control\n");
-
-		return err;
-	}
-
 	/* Turn VGA_VDDIO_2.8V off */
 	err = regulator_disable(s5ka3dfx_vga_vddio);
 	if (err) {
@@ -1576,12 +1573,12 @@ static int s5ka3dfx_power_off(void)
 
 	udelay(1);
 
-
-
-
-	// Turn CAM_ISP_SYS_2.8V off
-	gpio_direction_output(GPIO_GPB7, 1);
-	gpio_set_value(GPIO_GPB7, 0);
+	/* Turn VGA_AVDD_2.8V off */
+	/*err = regulator_disable(s5ka3dfx_vga_avdd);
+	if (err) {
+		pr_err("Failed to disable regulator vga_avdd\n");
+		return -EINVAL;
+	}*/
 
 	gpio_free(GPIO_GPB7);
 	gpio_free(GPIO_CAM_VGA_nRST);
@@ -1598,23 +1595,18 @@ static int s5ka3dfx_power_en(int onoff)
 	 * on if something odd happens and we are closed
 	 * by camera framework before we even completely opened.
 	 */
-	 pr_err("%s/n", __func__);
 	if (onoff != s5ka3dfx_powered_on) {
-		if (onoff){
-			pr_err("%s ON/n", __func__);
+		if (onoff)
 			err = s5ka3dfx_power_on();
-			pr_err("%s ON %d/n", __func__, err);
-		} else {
-			pr_err("%s OFF/n", __func__);
+		else {
 			err = s5ka3dfx_power_off();
 			s3c_i2c0_force_stop();
-			pr_err("%s OFF %d/n", __func__, err);
 		}
 		if (!err)
 			s5ka3dfx_powered_on = onoff;
 	}
 	mutex_unlock(&s5ka3dfx_lock);
-	pr_err("%s/n", __func__);
+
 	return err;
 }
 
@@ -2099,7 +2091,7 @@ static struct i2c_board_info i2c_devs10[] __initdata = {
 
 static struct i2c_board_info i2c_devs5[] __initdata = {
 	{
-		I2C_BOARD_INFO("bma023", (0x38)),
+		I2C_BOARD_INFO("bma023", 0x38),
 	},
 };
 
@@ -2265,7 +2257,6 @@ static struct yas529_platform_data yas529_pdata = {
 	.reset_line = GPIO_MSENSE_nRST,
 	.reset_asserted = GPIO_LEVEL_LOW,
 };
-
 static struct i2c_board_info i2c_devs12[] __initdata = {
 	{
 		I2C_BOARD_INFO("yas529", 0x2e),
@@ -2275,9 +2266,9 @@ static struct i2c_board_info i2c_devs12[] __initdata = {
 
 #if defined (CONFIG_SAMSUNG_CAPTIVATE)
 static struct i2c_board_info i2c_devs13[] __initdata = {
-    {
-      I2C_BOARD_INFO("A1026_driver", (0x3E)),
-    },
+  	{
+  		I2C_BOARD_INFO("A1026_driver", (0x3E)),
+  	},
 };
 #endif
 
@@ -4619,9 +4610,9 @@ static void __init aries_machine_init(void)
 	
 	/* yamaha magnetic sensor */
 	i2c_register_board_info(12, i2c_devs12, ARRAY_SIZE(i2c_devs12));
-	
+
 #if defined (CONFIG_SAMSUNG_CAPTIVATE)
-        i2c_register_board_info(13, i2c_devs13, ARRAY_SIZE(i2c_devs13)); /* audience A1026 */
+  	i2c_register_board_info(13, i2c_devs13, ARRAY_SIZE(i2c_devs13)); /* audience A1026 */
 #endif
 
 	/* panel */

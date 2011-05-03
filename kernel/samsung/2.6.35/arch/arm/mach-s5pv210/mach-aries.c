@@ -285,7 +285,7 @@ static struct s3cfb_lcd s6e63m0 = {
 	.p_width = 52,
 	.p_height = 86,
 	.bpp = 24,
-	.freq = 60,
+	.freq = 72,
 
 	.timing = {
 		.h_fp = 16,
@@ -1185,7 +1185,7 @@ static void touch_keypad_onoff(int onoff)
 		msleep(25);
 }
 
-static void touch_keypad_gpio_sleep(int onoff) {
+static void touch_keypad_gpio_onoff(int onoff) {
 	if (onoff == TOUCHKEY_ON)
 		s3c_gpio_slp_cfgpin(_3_GPIO_TOUCH_EN, S3C_GPIO_SLP_OUT1);
 	else
@@ -1210,7 +1210,7 @@ static struct touchkey_platform_data touchkey_data = {
 	.keycode_cnt = ARRAY_SIZE(touch_keypad_code),
 	.keycode = touch_keypad_code,
 	.touchkey_onoff = touch_keypad_onoff,
-	.touchkey_sleep_onoff = touch_keypad_gpio_sleep,
+	.touchkey_sleep_onoff = touch_keypad_gpio_onoff,
 	.fw_name = "cypress-touchkey.bin",
 	.scl_pin = _3_TOUCH_SCL_28V,
 	.sda_pin = _3_TOUCH_SDA_28V,

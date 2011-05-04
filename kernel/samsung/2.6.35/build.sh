@@ -38,13 +38,13 @@ build ()
     mka -C "$KERNEL_DIR" O="$target_dir" aries_${target}_defconfig HOSTCC="$CCACHE gcc"
     mka -C "$KERNEL_DIR" O="$target_dir" HOSTCC="$CCACHE gcc" CROSS_COMPILE="$CCACHE $CROSS_PREFIX" zImage modules
     cp "$target_dir"/arch/arm/boot/zImage $ANDROID_BUILD_TOP/device/samsung/$target/kernel
-    cp "$target_dir"/arch/arm/boot/zImage ../../../out/target/product/captivate/kernel_build/zImage
-     ../../../device/samsung/common/aries/mkshbootimg.py ~/android/CM7-OCUV/out/target/product/captivate/kernel_build/boot.img ~/android/CM7-OCUV/out/target/product/captivate/kernel_build/zImage ~/android/CM7-OCUV/out/target/product/captivate/ramdisk.cpio.gz ~/android/CM7-OCUV/out/target/product/captivate/recovery.cpio.gz 
+    cp "$target_dir"/arch/arm/boot/zImage ../../../out/target/product/$target/kernel_build/zImage
+     ../../../device/samsung/common/aries/mkshbootimg.py ~/android/CM7-OCUV/out/target/product/$target/kernel_build/boot.img ~/android/CM7-OCUV/out/target/product/$target/kernel_build/zImage ~/android/CM7-OCUV/out/target/product/$target/ramdisk.cpio.gz ~/android/CM7-OCUV/out/target/product/$target/recovery.cpio.gz 
    
     
     for module in "${MODULES[@]}" ; do
         cp "$target_dir/$module" $ANDROID_BUILD_TOP/device/samsung/$target
-        cp "$target_dir/$module" ../../../out/target/product/captivate/kernel_build
+        cp "$target_dir/$module" ../../../out/target/product/$target/kernel_build
         
     done
 }

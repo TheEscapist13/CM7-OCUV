@@ -37,6 +37,7 @@ build ()
     sed "s|usr/|$KERNEL_DIR/usr/|g" -i "$target_dir/usr/"*.list
     mka -C "$KERNEL_DIR" O="$target_dir" aries_${target}_defconfig HOSTCC="$CCACHE gcc"
     mka -C "$KERNEL_DIR" O="$target_dir" HOSTCC="$CCACHE gcc" CROSS_COMPILE="$CCACHE $CROSS_PREFIX" zImage modules
+    mkdir -p "$ANDROID_BUILD_TOP/out/target/product/$target/kernel_build"
     cp "$target_dir"/arch/arm/boot/zImage $ANDROID_BUILD_TOP/device/samsung/$target/kernel
     cp "$target_dir"/arch/arm/boot/zImage ../../../out/target/product/$target/kernel_build/zImage
      ../../../device/samsung/common/aries/mkshbootimg.py ~/android/CM7-OCUV/out/target/product/$target/kernel_build/boot.img ~/android/CM7-OCUV/out/target/product/$target/kernel_build/zImage ~/android/CM7-OCUV/out/target/product/$target/ramdisk.cpio.gz ~/android/CM7-OCUV/out/target/product/$target/recovery.cpio.gz 

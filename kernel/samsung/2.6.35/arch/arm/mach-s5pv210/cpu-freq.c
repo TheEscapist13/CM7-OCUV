@@ -54,7 +54,7 @@ static DEFINE_MUTEX(set_freq_lock);
 /* frequency */
 
 static struct cpufreq_frequency_table freq_table[] = {
-	{L0, 1600*1000},
+	{L0, 1550*1000},
 	{L1, 1500*1000},
 	{L2, 1400*1000},
 	{L3, 1300*1000},
@@ -71,7 +71,7 @@ static struct cpufreq_frequency_table freq_table[] = {
 extern int exp_UV_mV[11]; //Needed for uv
 unsigned int freq_uv_table[11][3] = {
 	//freq, 	stock, current
-	{1600000,	1450,	1450},
+	{1550000,	1450,	1450},
 	{1500000,	1450,	1450},
 	{1400000,	1400,	1400},
 	{1300000,	1350,	1350},
@@ -149,7 +149,7 @@ static u32 clkdiv_val[11][11] = {
 	 * HCLK_DSYS, PCLK_DSYS, HCLK_PSYS, PCLK_PSYS, ONEDRAM,
 	 * MFC, G3D }
 	 */
-	//L0:1600
+	//L0:1550
 	{0, 6, 6, 1.3, 3, 1, 4, 1, 3, 0.15, 0.15},
 	//L1: 1500
 	{0, 6, 6, 1, 3, 1, 4, 1, 3, 0, 0},
@@ -176,8 +176,8 @@ static u32 clkdiv_val[11][11] = {
 //And even more clocks
 static struct s3c_freq clk_info[] = {
 	 [L0] = {        /* L0: 1.6GHz */
-                .fclk       = 1600000,
-                .armclk     = 1600000,
+                .fclk       = 1550000,
+                .armclk     = 1550000,
                 .hclk_tns   = 0,
                 .hclk       = 133000,
                 .pclk       = 66000,
@@ -404,7 +404,7 @@ static void s5pv210_cpufreq_clksrcs_MPLL2APLL(unsigned int index,
 
 	switch(index) {
 		case L0:
-			__raw_writel(PLL45XX_APLL_VAL_1600, S5P_APLL_CON);
+			__raw_writel(PLL45XX_APLL_VAL_1550, S5P_APLL_CON);
 			break;
 		case L1:
 			__raw_writel(PLL45XX_APLL_VAL_1500, S5P_APLL_CON);

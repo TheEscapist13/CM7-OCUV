@@ -538,11 +538,12 @@ static int s5pv210_cpufreq_target(struct cpufreq_policy *policy,
 	 */
 	if (s3c_freqs.freqs.new == s3c_freqs.freqs.old && !first_run)
 		goto out;
-//Subtract the voltage in the undervolt table before supplying it to the cpu
-//Got to multiply by 1000 to account for the conversion between SGS and NS
+
+	if(unlikely(exp_UV_mV[index] < -50)) 
+		exp_UV_mV = -50;
+		
 	arm_volt = (dvs_conf[index].arm_volt - (exp_UV_mV[index]*1000));
-	//freq_uv_table[index][2] =(int) arm_volt / 1000;
-	//arm_volt = dvs_conf[index].arm_volt;
+
 	int_volt = dvs_conf[index].int_volt;
 
 	/* New clock information update */
@@ -729,7 +730,10 @@ static int s5pv210_cpufreq_target(struct cpufreq_policy *policy,
 	memcpy(&s3c_freqs.old, &s3c_freqs.new, sizeof(struct s3c_freq));
 	cpufreq_debug_printk(CPUFREQ_DEBUG_DRIVER, KERN_INFO,
 			"cpufreq: Performance changed[L%d]\n", index);
-//more uv
+	
+	if(unlikely(exp_UV_mV[index] < -50)) 
+		exp_UV_mV = -50;
+
 	previous_arm_volt = (dvs_conf[index].arm_volt - (exp_UV_mV[index] * 1000));
 	//freq_uv_table[index][2] = (int) previous_arm_volt / 1000;
 
@@ -774,9 +778,11 @@ static int s5pv210_cpufreq_resume(struct cpufreq_policy *policy)
 
 	memcpy(&s3c_freqs.old, &clk_info[level],
 			sizeof(struct s3c_freq));
-//even more uv
+			
+	if(unlikely(exp_UV_mV[index] < -50)) 
+		exp_UV_mV = -50;
+
 	previous_arm_volt = (dvs_conf[level].arm_volt - (exp_UV_mV[level]*1000));
-	//freq_uv_table[level][2] = (int) previous_arm_volt / 1000;
 
 	return ret;
 }
@@ -844,9 +850,11 @@ static int __init s5pv210_cpufreq_driver_init(struct cpufreq_policy *policy)
 
 	memcpy(&s3c_freqs.old, &clk_info[level],
 			sizeof(struct s3c_freq));
-//is dat some more uv?
+			
+	if(unlikely(exp_UV_mV[index] < -50)) 
+		exp_UV_mV = -50;
+
 	previous_arm_volt = (dvs_conf[level].arm_volt - (exp_UV_mV[level]*1000));
-	//freq_uv_table[level][2] = (int) previous_arm_volt / 1000;
 
 	cpufreq_frequency_table_cpuinfo(policy, freq_table);
 //Set initial max speed to 1ghz for people who don't want to overclock

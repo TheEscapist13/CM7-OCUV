@@ -13,10 +13,11 @@
  *
  */
 
-#include <asm/hardware/coresight.h>
+
 #include <linux/amba/bus.h>
 #include <linux/io.h>
 #include <plat/pm.h>
+#include <asm/hardware/coresight.h>
 
 #define CS_ETB_BASE	(0xE0D00000 + 0x1000)
 #define CS_FUNNEL_BASE	(0xE0D00000 + 0x4000)

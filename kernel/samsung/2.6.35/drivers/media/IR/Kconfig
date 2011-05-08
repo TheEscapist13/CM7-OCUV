@@ -1,5 +1,5 @@
 config IR_CORE
-	tristate "Core IR support"
+	tristate
 	depends on INPUT
 	default INPUT
 

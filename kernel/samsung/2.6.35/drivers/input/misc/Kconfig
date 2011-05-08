@@ -12,12 +12,6 @@ menuconfig INPUT_MISC
 
 if INPUT_MISC
 
-config GYRO_K3G
-	tristate "K3G driver for s5pc11x"
-	default n
-	help
-	  This option enables gyro sensors using K3G driver
-
 config INPUT_88PM860X_ONKEY
 	tristate "88PM860x ONKEY support"
 	depends on MFD_88PM860X
@@ -57,33 +51,6 @@ config INPUT_AD714X_SPI
 
 	  To compile this driver as a module, choose M here: the
 	  module will be called ad714x-spi.
-
-config INPUT_BMA023
-	tristate "Bosch Sensortec BMA023 Acceleration Sensor"
-	depends on I2C
-
-config INPUT_YAS529
-	tristate "Yamaha YAS529 Geomagnetic Sensor"
-	depends on I2C
-
-config INPUT_YAS529_POSITION
-	int "YAS529 Mounting Position on Board"
-	depends on INPUT_YAS529
-	default "1"
-	help
-	  Chip mounting position (pin 1).
-	    0: top, upper-left
-	    1: top, upper-right
-	    2: top, lower-right
-	    3: top, lower-left
-	    4: bottom, upper-left
-	    5: bottom, upper-right
-	    6: bottom, lower-right
-	    7: bottom, lower-left
-
-config INPUT_ORIENTATION
-	tristate "Yamaha Orientation Sensor"
-	depends on I2C
 
 config INPUT_PCSPKR
 	tristate "PC Speaker support"
@@ -216,17 +183,6 @@ config INPUT_ATI_REMOTE2
 	  To compile this driver as a module, choose M here: the module will be
 	  called ati_remote2.
 
-config INPUT_KEYCHORD
-	tristate "Key chord input driver support"
-	help
-	  Say Y here if you want to enable the key chord driver
-	  accessible at /dev/keychord.  This driver can be used
-	  for receiving notifications when client specified key
-	  combinations are pressed.
-
-	  To compile this driver as a module, choose M here: the
-	  module will be called keychord.
-
 config INPUT_KEYSPAN_REMOTE
 	tristate "Keyspan DMR USB remote control (EXPERIMENTAL)"
 	depends on EXPERIMENTAL
@@ -346,11 +302,6 @@ config INPUT_WINBOND_CIR
 	  To compile this driver as a module, choose M here: the module will be
 	  called winbond_cir.
 
-config INPUT_GPIO
-	tristate "GPIO driver support"
-	help
-	  Say Y here if you want to support gpio based keys, wheels etc...
-
 config HP_SDC_RTC
 	tristate "HP SDC Real Time Clock"
 	depends on (GSC || HP300) && SERIO
@@ -438,13 +389,5 @@ config INPUT_PCAP
 
 	  To compile this driver as a module, choose M here: the
 	  module will be called pcap_keys.
-
-config OPTICAL_GP2A
-	depends on I2C && GENERIC_GPIO
-	tristate "GP2A ambient light and proximity input device"
-	default n
-	help
-	  This option enables proximity & light sensors using gp2a driver.
-
 
 endif

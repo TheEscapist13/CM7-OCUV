@@ -39,7 +39,7 @@ extern void error(char *x);
 
 #ifdef CONFIG_DEBUG_ICEDCC
 
-#if defined(CONFIG_CPU_V6) || defined(CONFIG_CPU_V7)
+#ifdef CONFIG_CPU_V6
 
 static void icedcc_putc(int ch)
 {

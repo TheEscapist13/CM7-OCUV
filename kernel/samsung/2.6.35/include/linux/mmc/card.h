@@ -24,7 +24,6 @@ struct mmc_cid {
 };
 
 struct mmc_csd {
-	unsigned char		structure;
 	unsigned char		mmca_vsn;
 	unsigned short		cmdclass;
 	unsigned short		tacc_clks;

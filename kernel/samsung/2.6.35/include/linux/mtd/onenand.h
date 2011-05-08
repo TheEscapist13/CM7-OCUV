@@ -68,7 +68,6 @@ struct onenand_bufferram {
  * @write_word:		[REPLACEABLE] hardware specific function for write
  *			register of OneNAND
  * @mmcontrol:		sync burst read function
- * @chip_probe:		[REPLACEABLE] hardware specific function for chip probe
  * @block_markbad:	function to mark a block as bad
  * @scan_bbt:		[REPLACEALBE] hardware specific function for scanning
  *			Bad block Table
@@ -103,7 +102,6 @@ struct onenand_chip {
 
 	unsigned int		bufferram_index;
 	struct onenand_bufferram	bufferram[MAX_BUFFERRAM];
-	struct clk		*clk;
 
 	int (*command)(struct mtd_info *mtd, int cmd, loff_t address, size_t len);
 	int (*wait)(struct mtd_info *mtd, int state);
@@ -116,7 +114,6 @@ struct onenand_chip {
 	unsigned short (*read_word)(void __iomem *addr);
 	void (*write_word)(unsigned short value, void __iomem *addr);
 	void (*mmcontrol)(struct mtd_info *mtd, int sync_read);
-	int (*chip_probe)(struct mtd_info *mtd);
 	int (*block_markbad)(struct mtd_info *mtd, loff_t ofs);
 	int (*scan_bbt)(struct mtd_info *mtd);
 

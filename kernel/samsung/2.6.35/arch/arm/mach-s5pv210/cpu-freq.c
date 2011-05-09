@@ -540,7 +540,7 @@ static int s5pv210_cpufreq_target(struct cpufreq_policy *policy,
 		goto out;
 
 	if(unlikely(exp_UV_mV[index] < -50)) 
-		exp_UV_mV = -50;
+		exp_UV_mV[index] = -50;
 		
 	arm_volt = (dvs_conf[index].arm_volt - (exp_UV_mV[index]*1000));
 
@@ -732,7 +732,7 @@ static int s5pv210_cpufreq_target(struct cpufreq_policy *policy,
 			"cpufreq: Performance changed[L%d]\n", index);
 	
 	if(unlikely(exp_UV_mV[index] < -50)) 
-		exp_UV_mV = -50;
+		exp_UV_mV[index] = -50;
 
 	previous_arm_volt = (dvs_conf[index].arm_volt - (exp_UV_mV[index] * 1000));
 	//freq_uv_table[index][2] = (int) previous_arm_volt / 1000;
@@ -779,8 +779,8 @@ static int s5pv210_cpufreq_resume(struct cpufreq_policy *policy)
 	memcpy(&s3c_freqs.old, &clk_info[level],
 			sizeof(struct s3c_freq));
 			
-	if(unlikely(exp_UV_mV[index] < -50)) 
-		exp_UV_mV = -50;
+	if(unlikely(exp_UV_mV[level] < -50)) 
+		exp_UV_mV[level] = -50;
 
 	previous_arm_volt = (dvs_conf[level].arm_volt - (exp_UV_mV[level]*1000));
 
@@ -851,8 +851,8 @@ static int __init s5pv210_cpufreq_driver_init(struct cpufreq_policy *policy)
 	memcpy(&s3c_freqs.old, &clk_info[level],
 			sizeof(struct s3c_freq));
 			
-	if(unlikely(exp_UV_mV[index] < -50)) 
-		exp_UV_mV = -50;
+	if(unlikely(exp_UV_mV[level] < -50)) 
+		exp_UV_mV[level] = -50;
 
 	previous_arm_volt = (dvs_conf[level].arm_volt - (exp_UV_mV[level]*1000));
 

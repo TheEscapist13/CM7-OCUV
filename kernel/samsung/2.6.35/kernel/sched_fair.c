@@ -3673,7 +3673,7 @@ static const struct sched_class fair_sched_class = {
 	.get_rr_interval	= get_rr_interval_fair,
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
-	.moved_group		= moved_group_fair,
+	.task_move_group	= moved_group_fair,
 #endif
 };
 

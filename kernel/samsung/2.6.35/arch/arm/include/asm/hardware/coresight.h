@@ -132,6 +132,14 @@ struct tracectx {
 				ETMCTRL_BRANCH_OUTPUT | \
 				ETMCTRL_DO_CONTEXTID)
 
+#define ETMR_TRACEIDR    0x200
+	 	
+/* ETM management registers, "ETM Architecture", 3.5.24 */
+#define ETMMR_OSLAR  0x300
+#define ETMMR_OSLSR  0x304
+#define ETMMR_OSSRR  0x308
+#define ETMMR_PDSR  0x314
+
 /* ETB registers, "CoreSight Components TRM", 9.3 */
 #define ETBR_DEPTH		0x04
 #define ETBR_STATUS		0x0c

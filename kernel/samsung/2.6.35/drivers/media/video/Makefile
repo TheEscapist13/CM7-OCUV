@@ -84,6 +84,10 @@ obj-$(CONFIG_SOC_CAMERA_OV9640)		+= ov9640.o
 obj-$(CONFIG_SOC_CAMERA_RJ54N1)		+= rj54n1cb0c.o
 obj-$(CONFIG_SOC_CAMERA_TW9910)		+= tw9910.o
 
+obj-$(CONFIG_VIDEO_CE147) += ce147.o
+obj-$(CONFIG_VIDEO_S5KA3DFX)   += s5ka3dfx.o
+obj-$(CONFIG_VIDEO_S5K4ECGX)   += s5k4ecgx.o
+
 # And now the v4l2 drivers:
 
 obj-$(CONFIG_VIDEO_BT848) += bt8xx/
@@ -171,6 +175,7 @@ obj-$(CONFIG_ARCH_DAVINCI)		+= davinci/
 obj-$(CONFIG_VIDEO_SH_VOU)		+= sh_vou.o
 
 obj-$(CONFIG_VIDEO_AU0828) += au0828/
+obj-$(CONFIG_VIDEO_SAMSUNG) += samsung/
 
 obj-$(CONFIG_USB_VIDEO_CLASS)	+= uvc/
 obj-$(CONFIG_VIDEO_SAA7164)     += saa7164/

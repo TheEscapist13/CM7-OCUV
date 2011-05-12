@@ -4852,6 +4852,10 @@ static struct platform_device *aries_devices[] __initdata = {
 #ifdef CONFIG_S3C_DEV_HSMMC3
 	&s3c_device_hsmmc3,
 #endif
+#ifdef CONFIG_VIDEO_TV20
+	&spv_device_tvout,
+#endif
+
 
 	&sec_device_battery,
 	&s3c_device_i2c10,

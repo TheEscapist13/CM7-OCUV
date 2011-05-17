@@ -40,7 +40,6 @@
 #include <plat/gpio-cfg.h>
 #include <mach/regs-clock.h>
 #include "wm8994_samsung.h"
-//voodoo sound
 #if defined(CONFIG_SND_VOODOO)
 #include "wm8994_voodoo.h"
 #endif
@@ -571,6 +570,7 @@ static int wm8994_set_input_source(struct snd_kcontrol *kcontrol,
 		.private_value = SOC_SINGLE_VALUE(reg, shift, max, invert) }
 
 static const DECLARE_TLV_DB_SCALE(digital_tlv, -7162, 37, 1);
+//Here's the volume range for speaker. Will modify and test later.
 static const DECLARE_TLV_DB_LINEAR(digital_tlv_spkr, -5700, 600);
 static const DECLARE_TLV_DB_LINEAR(digital_tlv_rcv, -5700, 600);
 static const DECLARE_TLV_DB_LINEAR(digital_tlv_headphone, -5700, 600);

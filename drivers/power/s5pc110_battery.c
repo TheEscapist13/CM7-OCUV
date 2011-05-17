@@ -207,7 +207,7 @@ static int s3c_bat_get_property(struct power_supply *bat_ps,
 		val->intval = 1;
 		break;
 	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
-		if(chg->pdata && chg->pdata->sdp_fuelgauge &&
+		if(chg->pdata && chg->pdata->psy_fuelgauge &&
 			chg->pdata->psy_fuelgauge->get_property &&
 			chg->pdata->psy_fuelgauge->get_property(chg->pdata->psy_fuelgauge, 
 			POWER_SUPPLY_PROP_VOLTAGE_NOW, val) < 0)
@@ -217,9 +217,9 @@ static int s3c_bat_get_property(struct power_supply *bat_ps,
 		if (chg->pdata && chg->pdata->psy_fuelgauge &&
 			chg->pdata->psy_fuelgauge->get_property &&
 			chg->pdata->psy_fuelgauge->get_property(chg->pdata->psy_fuelgauge,
-				POWER_SUPPLY_DROP_CAPACITY, val) < 0)
+				POWER_SUPPLY_PROP_CAPACITY, val) < 0)
 			return -EINVAL;
-		if(chg->bat_info.bat_max_soc > 0) {
+		if(chg->bat_info.batt_max_soc > 0) {
 			val->intval = ((val->intval * 100) / (int)chg->bat_info.batt_max_soc);
 		if(val->intval > 100)
 			val->intval = 100;

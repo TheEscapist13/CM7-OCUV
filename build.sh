@@ -39,7 +39,7 @@ build ()
     mka -C "$KERNEL_DIR" O="$target_dir" HOSTCC="$CCACHE gcc" CROSS_COMPILE="$CCACHE $CROSS_PREFIX" zImage modules
     mkdir -p "$ANDROID_BUILD_TOP/out/target/product/$target/kernel_build"
     cp "$target_dir"/arch/arm/boot/zImage ../../../out/target/product/$target/kernel_build/zImage
-     ../../../device/samsung/common/aries/mkshbootimg.py ~/android/CM7-OCUV/out/target/product/$target/kernel_build/boot.img ~/android/CM7-OCUV/out/target/product/$target/kernel_build/zImage ~/android/CM7-OCUV/out/target/product/$target/ramdisk.cpio.gz ~/android/CM7-OCUV/out/target/product/$target/recovery.cpio.gz 
+     ../../../device/samsung/common/aries/mkshbootimg.py ~/android/out/target/product/$target/kernel_build/boot.img ~/android/out/target/product/$target/kernel_build/zImage ~/android/out/target/product/$target/ramdisk.cpio.gz ~/android/out/target/product/$target/recovery.cpio.gz 
    
     
     for module in "${MODULES[@]}" ; do

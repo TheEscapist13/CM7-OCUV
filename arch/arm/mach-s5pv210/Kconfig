@@ -55,11 +55,11 @@ config S5PV210_POWER_DOMAIN
 	  Enable S5PV210 power domain support.
 
 config S5PV210_CORESIGHT
-  bool "Coresight"
-  select OC_ETM
-  default y
-  help
-    Support embedded trace cell
+	bool "Coresight"
+	select OC_ETM
+	default y
+	help
+	  Support embedded trace cell
 
 # machine support
 
@@ -138,6 +138,7 @@ config MACH_HERRING
 	select ARCH_HAS_CPUFREQ
 	select S3C_DEV_HSMMC
 	select S3C_DEV_HSMMC1 if !S5PV210_SD_CH0_8BIT
+	select S3C_DEV_HSMMC2
 	select S3C_DEV_HSMMC3 if !S5PV210_SD_CH2_8BIT
 	select S5PV210_SETUP_SDHCI
 	select S5PV210_POWER_DOMAIN
@@ -156,14 +157,29 @@ config MACH_ARIES
 	select ARCH_HAS_CPUFREQ
 	select S3C_DEV_HSMMC
 	select S3C_DEV_HSMMC1 if !S5PV210_SD_CH0_8BIT
-	select S3C_DEV_HSMMC2
-        select S3C_DEV_HSMMC3 if !S5PV210_SD_CH2_8BIT
+        select S3C_DEV_HSMMC2 if !S5PV210_SD_CH2_8BIT
 	select S5PV210_SETUP_SDHCI
 	select S5PV210_POWER_DOMAIN
 	help
 	  Machine support for Aries
 
 if MACH_ARIES
+choice
+	prompt "Select phone Type"
+	
+config PHONE_ARIES
+	bool "select aries"
+	depends on MACH_ARIES
+	help
+	 Select Aries Phone
+
+config PHONE_CRESPO
+	bool "select crespo"
+	depends on MACH_ARIES
+	help
+	 Select Crespo Phone
+
+endchoice
 choice
 	prompt "Select Device Type"
 

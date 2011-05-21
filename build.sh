@@ -22,7 +22,7 @@ setup ()
         CCACHE=""
     fi
 
-    CROSS_PREFIX="$ANDROID_TOOLCHAIN/arm-eabi-"
+    CROSS_PREFIX="/home/dylan/bin/arm-2011.03/bin/arm-none-eabi-"
 }
 
 build ()
@@ -39,7 +39,7 @@ build ()
     mka -C "$KERNEL_DIR" O="$target_dir" HOSTCC="$CCACHE gcc" CROSS_COMPILE="$CCACHE $CROSS_PREFIX" zImage modules
     mkdir -p "$ANDROID_BUILD_TOP/out/target/product/$target/kernel_build"
     cp "$target_dir"/arch/arm/boot/zImage ../../../out/target/product/$target/kernel_build/zImage
-     ../../../device/samsung/common/aries/mkshbootimg.py ~/android/out/target/product/$target/kernel_build/boot.img ~/android/out/target/product/$target/kernel_build/zImage ~/android/out/target/product/$target/ramdisk.cpio.gz ~/android/out/target/product/$target/recovery.cpio.gz 
+     ../../../device/samsung/aries-common/mkshbootimg.py ~/android/out/target/product/$target/kernel_build/boot.img ~/android/out/target/product/$target/kernel_build/zImage ~/android/out/target/product/$target/ramdisk.cpio.gz ~/android/out/target/product/$target/recovery.cpio.gz 
    
     
     for module in "${MODULES[@]}" ; do
@@ -57,7 +57,7 @@ fi
 
 targets=("$@")
 if [ 0 = "${#targets[@]}" ] ; then
-    targets=(captivate galaxys galaxysb vibrant)
+    targets=(captivatemtd galaxysmtd galaxysb vibrantmtd)
 fi
 
 START=$(date +%s)

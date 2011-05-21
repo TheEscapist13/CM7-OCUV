@@ -1,1 +1,0 @@
-#define UTS_RELEASE "2.6.35.7v5.3-CAPTIVATE+"

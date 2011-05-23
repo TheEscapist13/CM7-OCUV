@@ -94,10 +94,10 @@ config FB_S3C_TL2796
         ---help---
           This enables support for Samsung TL2796 WVGA LCD panel
 
-#config FB_VOODOO
-#	bool "Voodoo Color"
-#	depends on FB_S3C_TL2796
-#	default y
+config FB_VOODOO
+	bool "Voodoo Color"
+	depends on FB_S3C_TL2796
+	default y
 
 config FB_S3C_NT35580
         bool "NT35580"

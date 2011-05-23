@@ -18,6 +18,7 @@
 #include <linux/tl2796.h>
 #include <linux/nt35580.h>
 #include <mach/gpio.h>
+#include <linux/delay.h>
 
 static const u16 s6e63m0_SEQ_STANDBY_ON[] = {
 	0x010,	/* Stand-by On Command */
@@ -161,11 +162,8 @@ static const struct tl2796_gamma_adj_points gamma_adj_points = {
 	.v171 = BV_171,
 	.v255 = BV_255,
 };
-#ifdef CONFIG_FB_VOODOO
-struct gamma_entry gamma_table[] = {
-#else
+
 static const struct gamma_entry gamma_table[] = {
-#endif
 	{       BV_0, { 4200000, 4200000, 4200000, }, },
 	{          1, { 3994200, 4107600, 3910200, }, },
 	{ 0x00000400, { 3669486, 3738030, 3655093, }, },
@@ -259,6 +257,18 @@ static const struct gamma_entry gamma_table[] = {
 	{ 0xFFFFFFFF, { 1489879, 1576363, 1151415, }, },
 };
 
+static void reset_lcd(struct s5p_panel_data *pdata)
+{
+	gpio_direction_output(pdata->gpio_rst, 1);
+	msleep(10);
+
+	gpio_set_value(pdata->gpio_rst, 0);
+	msleep(10);
+
+	gpio_set_value(pdata->gpio_rst, 1);
+	msleep(10);
+}
+
 static int configure_mtp_gpios(struct s5p_panel_data *pdata, bool enable)
 {
 	int i;
@@ -271,6 +281,9 @@ static int configure_mtp_gpios(struct s5p_panel_data *pdata, bool enable)
 		ret = gpio_request(pdata->gpio_dcx, "tl2796_dcx");
 		if (ret)
 			goto err_dcx;
+		ret = gpio_request(pdata->gpio_rst, "tl2796_rst");
+		if (ret)
+			goto err_rst;
 		for (i = 0; i < 8; i++) {
 			ret = gpio_request(pdata->gpio_db[i], "tl2796_dbx");
 			if (ret)
@@ -297,11 +310,16 @@ static int configure_mtp_gpios(struct s5p_panel_data *pdata, bool enable)
 		s3c_gpio_cfgpin(S5PV210_GPF1(i), S3C_GPIO_SFN(2));
 		s3c_gpio_setpull(S5PV210_GPF1(i), S3C_GPIO_PULL_NONE);
 	}
+
+	reset_lcd(pdata);
+
 	for (i = 7; i >= 0; i--) {
 		gpio_free(pdata->gpio_db[i]);
 err_dbx:
 		;
 	}
+	gpio_free(pdata->gpio_rst);
+err_rst:
 	gpio_free(pdata->gpio_dcx);
 err_dcx:
 	gpio_free(pdata->gpio_rdx);
@@ -318,6 +336,7 @@ struct s5p_panel_data herring_panel_data = {
 	.gpio_rdx = S5PV210_GPF0(2), /* Enable */
 	.gpio_csx = S5PV210_MP01(1),
 	.gpio_wrx = S5PV210_MP04(1), /* SCL pad */
+	.gpio_rst = S5PV210_MP05(5),
 	.gpio_db = {
 		S5PV210_GPF0(4),
 		S5PV210_GPF0(5),

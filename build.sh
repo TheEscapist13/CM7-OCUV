@@ -22,7 +22,7 @@ setup ()
         CCACHE=""
     fi
 
-    CROSS_PREFIX="/home/dylan/bin/arm-2011.03/bin/arm-none-eabi-"
+    CROSS_PREFIX="$ANDROID_TOOLCHAIN/arm-eabi-"
 }
 
 build ()
@@ -37,14 +37,9 @@ build ()
     sed "s|usr/|$KERNEL_DIR/usr/|g" -i "$target_dir/usr/"*.list
     mka -C "$KERNEL_DIR" O="$target_dir" aries_${target}_defconfig HOSTCC="$CCACHE gcc"
     mka -C "$KERNEL_DIR" O="$target_dir" HOSTCC="$CCACHE gcc" CROSS_COMPILE="$CCACHE $CROSS_PREFIX" zImage modules
-    mkdir -p "$ANDROID_BUILD_TOP/out/target/product/$target/kernel_build"
-    cp "$target_dir"/arch/arm/boot/zImage ../../../out/target/product/$target/kernel_build/zImage
-     ../../../device/samsung/aries-common/mkshbootimg.py ~/android/out/target/product/$target/kernel_build/boot.img ~/android/out/target/product/$target/kernel_build/zImage ~/android/out/target/product/$target/ramdisk.cpio.gz ~/android/out/target/product/$target/recovery.cpio.gz 
-   
-    
+    cp "$target_dir"/arch/arm/boot/zImage $ANDROID_BUILD_TOP/device/samsung/$target/kernel
     for module in "${MODULES[@]}" ; do
-        cp "$target_dir/$module" ../../../out/target/product/$target/kernel_build
-        
+        cp "$target_dir/$module" $ANDROID_BUILD_TOP/device/samsung/$target
     done
 }
     
@@ -73,3 +68,5 @@ E_SEC=$((ELAPSED - E_MIN * 60))
 printf "Elapsed: "
 [ $E_MIN != 0 ] && printf "%d min(s) " $E_MIN
 printf "%d sec(s)\n" $E_SEC
+
+
